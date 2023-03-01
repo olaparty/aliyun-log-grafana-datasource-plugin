@@ -7,6 +7,7 @@
   "backend": true,
   "logs": true,
   "alerting": true,
+  "pprof": true,
   "executable": "gpx_log-service-datasource",
   "info": {
     "description": "Aliyun log service datasource (backend version)",
@@ -36,7 +37,7 @@
     ],
     "screenshots": [],
     "version": "2.24",
-    "updated": "2023-01-12"
+    "updated": "2023-03-01"
   },
   "dependencies": {
     "grafanaDependency": ">=7.0.0",

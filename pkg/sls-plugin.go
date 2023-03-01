@@ -80,6 +80,8 @@ func (ds *SlsDatasource) QueryData(ctx context.Context, req *backend.QueryDataRe
 
 	defer func() {
 		close(ch)
+		client = nil
+		config = nil
 		if r := recover(); r != nil {
 			switch r.(type) {
 			case string:
@@ -210,15 +212,9 @@ func (ds *SlsDatasource) PublishStream(_ context.Context, req *backend.PublishSt
 
 func (ds *SlsDatasource) SortLogs(logs []map[string]string, col string) {
 	sort.Slice(logs, func(i, j int) bool {
-		f1, err := strconv.ParseFloat(logs[i][col], 64)
-		if err != nil {
-			backend.Logger.Error("SortLogs1", "error ", err)
-		}
-		f2, err := strconv.ParseFloat(logs[j][col], 64)
-		if err != nil {
-			backend.Logger.Error("SortLogs2", "error ", err)
-		}
-		if f1 < f2 {
+		iValue := toTime(logs[i][col])
+		jValue := toTime(logs[j][col])
+		if iValue.Unix() < jValue.Unix() {
 			return true
 		}
 		return false
@@ -231,6 +227,7 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	queryInfo := &QueryInfo{}
 
 	defer func() {
+		queryInfo = nil
 		if r := recover(); r != nil {
 			switch r.(type) {
 			case string:
@@ -297,8 +294,11 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	} else {
 		ycols = strings.Split(queryInfo.Ycol, ",")
 	}
+	for i := range ycols {
+		ycols[i] = strings.TrimSpace(ycols[i])
+	}
 	log.DefaultLogger.Info("QueryLogs", "getLogsResp", getLogsResp)
-
+	getLogsResp = nil
 	var frames data.Frames
 
 	if xcol == "trace" {
