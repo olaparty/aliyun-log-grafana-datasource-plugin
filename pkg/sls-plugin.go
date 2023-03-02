@@ -348,8 +348,65 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	}
 }
 
+func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string, ycols []string, frames *data.Frames) {
+	if len(logs) == 0 {
+		return
+	}
+	ds.SortLogs(logs, xcol)
+	metricName := ycols[1]
+	var labelNames []string
+	for k := range logs[0] {
+		if k != "__source__" && k != "__time__" && k != metricName && k != xcol {
+			labelNames = append(labelNames, k)
+		}
+	}
+	sort.Strings(labelNames)
+	timeFields := make(map[string][]time.Time)
+	metricFields := make(map[string][]float64)
+
+	frameLabelsMap := make(map[string]map[string]string)
+
+	for _, alog := range logs {
+		timeVal := alog[xcol]
+		metricVal := alog[metricName]
+		labels := map[string]string{}
+		labelsKey := ""
+		for _, l := range labelNames {
+			labels[l] = alog[l]
+			labelsKey += alog[l]
+		}
+		if _, ok := frameLabelsMap[labelsKey]; !ok {
+			frameLabelsMap[labelsKey] = labels
+		}
+		if _, ok := timeFields[labelsKey]; ok {
+			timeFields[labelsKey] = append(timeFields[labelsKey], toTime(timeVal))
+		} else {
+			timeFields[labelsKey] = []time.Time{toTime(timeVal)}
+		}
+		floatV, err := strconv.ParseFloat(metricVal, 64)
+		if err != nil {
+			log.DefaultLogger.Info("BuildFlowGraphV2", "ParseFloat", err, "value", metricVal)
+		}
+		if _, ok := metricFields[labelsKey]; ok {
+			metricFields[labelsKey] = append(metricFields[labelsKey], floatV)
+		} else {
+			metricFields[labelsKey] = []float64{floatV}
+		}
+	}
+	for k, v := range timeFields {
+		frame := data.NewFrame("")
+		frame.Fields = append(frame.Fields, data.NewField("Time", nil, v))
+		frame.Fields = append(frame.Fields, data.NewField("Value", frameLabelsMap[k], metricFields[k]))
+		*frames = append(*frames, frame)
+	}
+}
+
 func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, ycols []string, frames *data.Frames) {
 	if len(ycols) < 2 {
+		return
+	}
+	if ycols[0] == "" && ycols[1] != "" {
+		ds.BuildFlowGraphV2(logs, xcol, ycols, frames)
 		return
 	}
 	frame := data.NewFrame("")
@@ -391,12 +448,10 @@ func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, y
 		if !fieldSet[t+label] {
 			fieldSet[t+label] = true
 			floatV, err := strconv.ParseFloat(alog[ycols[1]], 64)
-			if err == nil {
-				fieldMap[label][t] = floatV
-			} else {
-				log.DefaultLogger.Error("BuildFlowGraph", "ParseFloat", err, "value", alog[ycols[1]])
-				fieldMap[label][t] = 0
+			if err != nil {
+				log.DefaultLogger.Info("BuildFlowGraph", "ParseFloat", err, "value", alog[ycols[1]])
 			}
+			fieldMap[label][t] = floatV
 		}
 	}
 	var frameLen int
@@ -435,12 +490,10 @@ func (ds *SlsDatasource) BuildBarGraph(logs []map[string]string, ycols []string,
 		for k, v := range alog {
 			if numMap[k] != nil {
 				floatV, err := strconv.ParseFloat(v, 64)
-				if err == nil {
-					numMap[k] = append(numMap[k], floatV)
-				} else {
-					log.DefaultLogger.Error("BuildBarGraph", "ParseFloat", err, "value", v)
-					numMap[k] = append(numMap[k], floatV)
+				if err != nil {
+					log.DefaultLogger.Info("BuildBarGraph", "ParseFloat", err, "value", v)
 				}
+				numMap[k] = append(numMap[k], floatV)
 			}
 			if k == strKey {
 				strArr = append(strArr, v)
@@ -470,12 +523,10 @@ func (ds *SlsDatasource) BuildMapGraph(logs []map[string]string, ycols []string,
 			}
 			if k == numKey {
 				floatV, err := strconv.ParseFloat(v, 64)
-				if err == nil {
-					numArr = append(numArr, floatV)
-				} else {
-					log.DefaultLogger.Error("BuildMapGraph", "ParseFloat", err, "value", v)
-					numArr = append(numArr, floatV)
+				if err != nil {
+					log.DefaultLogger.Info("BuildMapGraph", "ParseFloat", err, "value", v)
 				}
+				numArr = append(numArr, floatV)
 			}
 		}
 	}
@@ -501,12 +552,10 @@ func (ds *SlsDatasource) BuildPieGraph(logs []map[string]string, ycols []string,
 		for _, alog := range logs {
 			if alog[ycols[0]] == label {
 				floatV, err := strconv.ParseFloat(alog[ycols[1]], 64)
-				if err == nil {
-					fieldMap[label] = append(fieldMap[label], floatV)
-				} else {
-					log.DefaultLogger.Error("BuildPieGraph", "ParseFloat", err, "value", alog[ycols[1]])
-					fieldMap[label] = append(fieldMap[label], 0)
+				if err != nil {
+					log.DefaultLogger.Info("BuildPieGraph", "ParseFloat", err, "value", alog[ycols[1]])
 				}
+				fieldMap[label] = append(fieldMap[label], floatV)
 				exist = true
 			}
 		}
@@ -538,12 +587,10 @@ func (ds *SlsDatasource) BuildTimingGraph(logs []map[string]string, xcol string,
 		for k, v := range alog {
 			if fieldMap[k] != nil {
 				floatV, err := strconv.ParseFloat(v, 64)
-				if err == nil {
-					fieldMap[k] = append(fieldMap[k], floatV)
-				} else {
-					log.DefaultLogger.Error("BuildTimingGraph", "ParseFloat", err, "value", v)
-					fieldMap[k] = append(fieldMap[k], 0)
+				if err != nil {
+					log.DefaultLogger.Info("BuildTimingGraph", "ParseFloat", err, "value", v)
 				}
+				fieldMap[k] = append(fieldMap[k], floatV)
 			}
 			if xcol != "" && xcol == k {
 				times = append(times, toTime(v))
@@ -600,7 +647,7 @@ func (ds *SlsDatasource) BuildTable(logs []map[string]string, xcol string, ycols
 			if xcol != "" && xcol == k {
 				floatValue, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					log.DefaultLogger.Error("BuildTable", "ParseTime", err)
+					log.DefaultLogger.Info("BuildTable", "ParseTime", err)
 					continue
 				}
 				t := time.Unix(int64(floatValue), 0)
@@ -640,7 +687,7 @@ func (ds *SlsDatasource) BuildLogs(logs []map[string]string, ycols []string, fra
 			if k == "__time__" {
 				floatValue, err := strconv.ParseFloat(v, 64)
 				if err != nil {
-					log.DefaultLogger.Error("BuildLogs", "ParseTime", err)
+					log.DefaultLogger.Info("BuildLogs", "ParseTime", err)
 					continue
 				}
 				times = append(times, time.Unix(int64(floatValue), 0))
@@ -697,18 +744,14 @@ func (ds *SlsDatasource) BuildTrace(logs []map[string]string, frames *data.Frame
 		operationName = append(operationName, alog["name"])
 		startTimeV, err := strconv.ParseFloat(alog["start"], 64)
 		if err != nil {
-			log.DefaultLogger.Error("BuildTrace", "ParseFloat", err)
-			startTime = append(startTime, 0)
-		} else {
-			startTime = append(startTime, startTimeV/1000)
+			log.DefaultLogger.Info("BuildTrace", "ParseFloat", err)
 		}
+		startTime = append(startTime, startTimeV/1000)
 		durationV, err := strconv.ParseFloat(alog["duration"], 64)
 		if err != nil {
-			log.DefaultLogger.Error("BuildTrace", "ParseFloat", err)
-			duration = append(duration, 0)
-		} else {
-			duration = append(duration, durationV/1000)
+			log.DefaultLogger.Info("BuildTrace", "ParseFloat", err)
 		}
+		duration = append(duration, durationV/1000)
 
 	}
 	frame.Fields = append(frame.Fields, data.NewField("operationName", nil, operationName))
