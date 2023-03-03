@@ -7,7 +7,6 @@
   "backend": true,
   "logs": true,
   "alerting": true,
-  "pprof": true,
   "executable": "gpx_log-service-datasource",
   "info": {
     "description": "Aliyun log service datasource (backend version)",

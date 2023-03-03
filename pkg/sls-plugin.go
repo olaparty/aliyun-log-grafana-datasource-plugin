@@ -324,8 +324,17 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 
 	if isFlowGraph {
 		log.DefaultLogger.Info("flow_graph")
-		ds.BuildFlowGraph(logs, xcol, ycols, &frames)
-	} else if xcol == "bar" {
+		err = ds.BuildFlowGraph(logs, xcol, ycols, &frames)
+		if err != nil {
+			response.Error = err
+			ch <- Result{
+				refId:        refId,
+				dataResponse: response,
+			}
+			return
+		}
+	}
+	if xcol == "bar" {
 		log.DefaultLogger.Info("bar")
 		ds.BuildBarGraph(logs, ycols, &frames)
 	} else if xcol == "map" {
@@ -401,7 +410,7 @@ func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string,
 	}
 }
 
-func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, ycols []string, frames *data.Frames) {
+func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, ycols []string, frames *data.Frames) (err error) {
 	if len(ycols) < 2 {
 		return
 	}
@@ -410,36 +419,43 @@ func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, y
 		return
 	}
 	frame := data.NewFrame("")
-	fieldMap := make(map[string]map[string]float64)
-	timeSet := make(map[string]bool)
+	fieldMap := make(map[int]map[int64]float64)
+	timeSet := make(map[int64]bool)
 	labelSet := make(map[string]bool)
 	var labelArr []string
 	for _, alog := range logs {
 		if !labelSet[alog[ycols[0]]] {
 			labelArr = append(labelArr, alog[ycols[0]])
 		}
-		timeSet[alog[xcol]] = true
+		timeSet[toTime(alog[xcol]).Unix()] = true
 		labelSet[alog[ycols[0]]] = true
 	}
-	var timeArr []string
+	var timeArr []int64
 	for k := range timeSet {
 		timeArr = append(timeArr, k)
 	}
 	sort.Slice(timeArr, func(i, j int) bool {
-		iValue := toTime(timeArr[i])
-		jValue := toTime(timeArr[j])
-		if iValue.Unix() < jValue.Unix() {
+		if timeArr[i] < timeArr[j] {
 			return true
 		}
 		return false
 	})
 	fieldSet := make(map[string]bool)
-	for label := range labelSet {
-		fieldMap[label] = make(map[string]float64)
+	labelToIndex := make(map[string]int)
+	for i := range labelArr {
+		fieldMap[i] = map[int64]float64{}
+		labelToIndex[labelArr[i]] = i
 	}
-	for label := range labelSet {
-		for _, t := range timeArr {
-			fieldMap[label][t] = 0
+	limit := 6000000
+	if len(labelArr)*len(timeArr) > limit {
+		s := fmt.Sprintf("BuildFlowGraph, More than %d points : %d", limit, len(labelArr)*len(timeArr))
+		log.DefaultLogger.Error(s)
+		err = errors.New(s)
+		return
+	}
+	for i := range labelArr {
+		for _, t0 := range timeArr {
+			fieldMap[i][t0] = 0
 		}
 	}
 	for _, alog := range logs {
@@ -447,35 +463,35 @@ func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, y
 		t := alog[xcol]
 		if !fieldSet[t+label] {
 			fieldSet[t+label] = true
-			floatV, err := strconv.ParseFloat(alog[ycols[1]], 64)
-			if err != nil {
+			floatV, err1 := strconv.ParseFloat(alog[ycols[1]], 64)
+			if err1 != nil {
 				log.DefaultLogger.Info("BuildFlowGraph", "ParseFloat", err, "value", alog[ycols[1]])
 			}
-			fieldMap[label][t] = floatV
+			fieldMap[labelToIndex[label]][toTime(t).Unix()] = floatV
 		}
 	}
 	var frameLen int
-	for _, k := range labelArr {
-		v := fieldMap[k]
+	for i, k := range labelArr {
+		v := fieldMap[i]
 		if len(v) > 0 {
 			if frameLen == 0 {
 				frameLen = len(v)
 			}
 			if len(v) == frameLen {
-				frame.Fields = append(frame.Fields, data.NewField(k, nil, mapToSlice(timeArr, v)))
+				arr := mapToSlice(timeArr, v)
+				frame.Fields = append(frame.Fields, data.NewField(k, nil, arr))
 			}
 		}
 	}
-
 	var times []time.Time
 	for _, k := range timeArr {
-		times = append(times, toTime(k))
+		times = append(times, time.Unix(k, 0))
 	}
 	if len(times) == frameLen {
 		frame.Fields = append([]*data.Field{data.NewField("time", nil, times)}, frame.Fields...)
 	}
-
 	*frames = append(*frames, frame)
+	return
 }
 
 func (ds *SlsDatasource) BuildBarGraph(logs []map[string]string, ycols []string, frames *data.Frames) {
@@ -770,7 +786,7 @@ func (ds *SlsDatasource) BuildTrace(logs []map[string]string, frames *data.Frame
 	*frames = append(*frames, frame)
 }
 
-func mapToSlice(timeArr []string, m map[string]float64) []float64 {
+func mapToSlice(timeArr []int64, m map[int64]float64) []float64 {
 	s := make([]float64, 0, len(timeArr))
 	for _, v := range timeArr {
 		s = append(s, m[v])

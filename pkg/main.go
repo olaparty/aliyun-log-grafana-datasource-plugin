@@ -1,14 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"io/ioutil"
-	"net/http"
-	_ "net/http/pprof"
 	"os"
-	"path/filepath"
 )
 
 func main() {
@@ -21,35 +16,8 @@ func main() {
 	// ID). When datasource configuration changed Dispose method will be called and
 	// new datasource instance created using NewSampleDatasource factory.
 
-	openPprof()
 	if err := datasource.Manage("aliyun-log-backend-datasource", NewSLSDatasource, datasource.ManageOpts{}); err != nil {
 		log.DefaultLogger.Error(err.Error())
 		os.Exit(1)
-	}
-}
-
-func openPprof() {
-	ex, err := os.Executable()
-	if err != nil {
-		log.DefaultLogger.Error(err.Error())
-		return
-	}
-	exPath := filepath.Dir(ex)
-	b, err := ioutil.ReadFile(exPath + "/plugin.json")
-	if err != nil {
-		log.DefaultLogger.Error(err.Error())
-		return
-	}
-	m := map[string]interface{}{}
-	err = json.Unmarshal(b, &m)
-	if err != nil {
-		log.DefaultLogger.Error(err.Error())
-		return
-	}
-	isOpen := m["pprof"]
-	if isOpen != nil && isOpen.(bool) == true {
-		go func() {
-			log.DefaultLogger.Error(http.ListenAndServe("localhost:60600", nil).Error())
-		}()
 	}
 }
