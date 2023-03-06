@@ -327,12 +327,14 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 		err = ds.BuildFlowGraph(logs, xcol, ycols, &frames)
 		if err != nil {
 			response.Error = err
-			ch <- Result{
-				refId:        refId,
-				dataResponse: response,
-			}
-			return
+		} else {
+			response.Frames = frames
 		}
+		ch <- Result{
+			refId:        refId,
+			dataResponse: response,
+		}
+		return
 	}
 	if xcol == "bar" {
 		log.DefaultLogger.Info("bar")
@@ -446,9 +448,8 @@ func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, y
 		fieldMap[i] = map[int64]float64{}
 		labelToIndex[labelArr[i]] = i
 	}
-	limit := 6000000
-	if len(labelArr)*len(timeArr) > limit {
-		s := fmt.Sprintf("BuildFlowGraph, More than %d points : %d", limit, len(labelArr)*len(timeArr))
+	if len(labelArr)*len(timeArr) > maxPointsLimit {
+		s := fmt.Sprintf("BuildFlowGraph, More than %d points : %d", maxPointsLimit, len(labelArr)*len(timeArr))
 		log.DefaultLogger.Error(s)
 		err = errors.New(s)
 		return
