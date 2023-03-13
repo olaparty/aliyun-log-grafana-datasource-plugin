@@ -286,16 +286,20 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 		return
 	}
 	keys := c.Keys
+	if compatible {
+		queryInfo.Ycol = strings.Replace(queryInfo.Ycol, " ", "", -1)
+	}
 
-	//queryInfo.Ycol = strings.Replace(queryInfo.Ycol, " ", "", -1)
 	isFlowGraph := strings.Contains(queryInfo.Ycol, "#:#")
 	if isFlowGraph {
 		ycols = strings.Split(queryInfo.Ycol, "#:#")
 	} else {
 		ycols = strings.Split(queryInfo.Ycol, ",")
 	}
-	for i := range ycols {
-		ycols[i] = strings.TrimSpace(ycols[i])
+	if !compatible {
+		for i := range ycols {
+			ycols[i] = strings.TrimSpace(ycols[i])
+		}
 	}
 	log.DefaultLogger.Info("QueryLogs", "getLogsResp", getLogsResp)
 	getLogsResp = nil
@@ -420,7 +424,12 @@ func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, y
 		ds.BuildFlowGraphV2(logs, xcol, ycols, frames)
 		return
 	}
-	frame := data.NewFrame("")
+	var frame *data.Frame
+	if compatible {
+		frame = data.NewFrame("response")
+	} else {
+		frame = data.NewFrame("")
+	}
 	fieldMap := make(map[int]map[int64]float64)
 	timeSet := make(map[int64]bool)
 	labelSet := make(map[string]bool)
@@ -589,7 +598,12 @@ func (ds *SlsDatasource) BuildPieGraph(logs []map[string]string, ycols []string,
 
 func (ds *SlsDatasource) BuildTimingGraph(logs []map[string]string, xcol string, ycols []string, keys []string, frames *data.Frames) {
 	ds.SortLogs(logs, xcol)
-	frame := data.NewFrame("")
+	var frame *data.Frame
+	if compatible {
+		frame = data.NewFrame("response")
+	} else {
+		frame = data.NewFrame("")
+	}
 	fieldMap := make(map[string][]float64)
 	var times []time.Time
 	if len(ycols) == 1 && ycols[0] == "" && len(keys) > 0 {

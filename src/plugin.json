@@ -9,6 +9,7 @@
   "alerting": true,
   "executable": "gpx_log-service-datasource",
   "flow_chart_max_points": "6000000",
+  "legacy_compatible": false,
   "info": {
     "description": "Aliyun log service datasource (backend version)",
     "author": {

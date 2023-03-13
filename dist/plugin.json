@@ -9,6 +9,7 @@
   "alerting": true,
   "executable": "gpx_log-service-datasource",
   "flow_chart_max_points": "6000000",
+  "legacy_compatible": false,
   "info": {
     "description": "Aliyun log service datasource (backend version)",
     "author": {
@@ -37,7 +38,7 @@
     ],
     "screenshots": [],
     "version": "2.26",
-    "updated": "2023-03-06"
+    "updated": "2023-03-13"
   },
   "dependencies": {
     "grafanaDependency": ">=7.0.0",

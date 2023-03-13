@@ -29,6 +29,7 @@ func main() {
 }
 
 var maxPointsLimit = 6000000
+var compatible = false
 
 func loadConfig() {
 	ex, err := os.Executable()
@@ -61,4 +62,12 @@ func loadConfig() {
 		return
 	}
 	maxPointsLimit = int(parseInt)
+
+	compatibleI := m["legacy_compatible"]
+	if compatibleI == nil {
+		return
+	}
+	if _, ok := compatibleI.(bool); ok {
+		compatible = compatibleI.(bool)
+	}
 }
