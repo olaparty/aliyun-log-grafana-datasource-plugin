@@ -417,6 +417,10 @@ func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string,
 }
 
 func (ds *SlsDatasource) BuildFlowGraph(logs []map[string]string, xcol string, ycols []string, frames *data.Frames) (err error) {
+	if len(logs) == 0 {
+		frames = &data.Frames{}
+		return
+	}
 	if len(ycols) < 2 {
 		return
 	}
