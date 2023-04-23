@@ -36,7 +36,7 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
       to: options.range.to.valueOf().toString(),
       queries: [
         {
-          datasource: this.name,
+          datasource: {type: this.type, uid: this.uid},
           datasourceId: this.id,
           query: replaceQueryParameters(query, options),
         },
