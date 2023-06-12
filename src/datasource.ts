@@ -21,6 +21,7 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
   }
 
   query(options: DataQueryRequest<SLSQuery>) {
+    // console.log("into query.")
     options.targets.forEach((q: SLSQuery) => {
       q.query = replaceQueryParameters(q, options);
     });
@@ -31,11 +32,13 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
   }
 
   metricFindQuery(query: SLSQuery|string, options?: any) {
+    // console.log("into metricFindQuery")
     const data = {
       from: options.range.from.valueOf().toString(),
       to: options.range.to.valueOf().toString(),
       queries: [
         {
+          // datasource: this.name,
           datasource: {type: this.type, uid: this.uid},
           datasourceId: this.id,
           query: replaceQueryParameters(query, options),
@@ -45,6 +48,7 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
     return getBackendSrv()
       .post('/api/ds/query', data)
       .then((response) => {
+        // console.log("metricFindQuery /api/ds/query response", response)
         return response.results.A.frames[0].data.values;
       })
       .then(mapToTextValue);
