@@ -7,7 +7,8 @@ import { QueryEditorProps } from '@grafana/data';
 
 import { SLSDataSource } from './datasource';
 import { defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
-import { xColInfoSeries, yColInfoSeries } from 'const';
+import { xColInfoSeries, yColInfoSeries } from './const';
+import MonacoQueryField from './SLS-monaco-editor/MonacoQueryField';
 
 // const { FormField } = LegacyForms;
 
@@ -17,6 +18,18 @@ export class SLSQueryEditor extends PureComponent<Props> {
   onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onChange, query } = this.props;
     onChange({ ...query, query: event.target.value });
+  };
+
+  onQueryTextChangeString = (value: string) => {
+    const { onChange, query } = this.props;
+    onChange({ ...query, query: value });
+  };
+
+  onQueryTextChangeWithRunQuery = (value: string) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, query: value });
+    // executes the query
+    onRunQuery();
   };
 
   onXChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -43,13 +56,22 @@ export class SLSQueryEditor extends PureComponent<Props> {
           <InlineFormLabel width={6} className="query-keyword">
             Query
           </InlineFormLabel>
-          <input
+          {/* <input
             className="gf-form-input"
             value={query}
             onChange={this.onQueryTextChange}
             onBlur={this.onQueryTextChange}
             style={{ fontFamily: 'Menlo, monospace' }}
-          ></input>
+          ></input> */}
+          <MonacoQueryField
+            onChange={this.onQueryTextChangeString}
+            onRunQuery={this.onQueryTextChangeWithRunQuery}
+            onBlur={this.onQueryTextChangeString}
+            initialValue={query ?? ''}
+            languageProvider={{} as any}
+            history={[]}
+            placeholder={''}
+          />
         </div>
         <div className="gf-form-inline" style={{ lineHeight: '32px', verticalAlign: 'center' }}>
           <InlineField label={'ycol'} labelWidth={12}>
@@ -77,9 +99,8 @@ export class SLSQueryEditor extends PureComponent<Props> {
               }
             />
           </InlineField>
-          <InlineField label={'xcol(time)'} labelWidth={12}>
+          <InlineField label={'xcol'} labelWidth={12}>
             <Input
-              style={{ fontFamily: 'Menlo, monospace' }}
               width={40}
               prefix={<Icon name="x" />}
               value={xcol}

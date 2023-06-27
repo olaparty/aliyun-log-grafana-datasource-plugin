@@ -3050,6 +3050,11 @@
   dependencies:
     source-map "^0.6.1"
 
+"@types/uuid@9.0.1":
+  version "9.0.1"
+  resolved "https://registry.npm.alibaba-inc.com/@types/uuid/download/@types/uuid-9.0.1.tgz#98586dc36aee8dacc98cc396dbca8d0429647aa6"
+  integrity sha512-rFT3ak0/2trgvp4yYZo5iKFEPsET7vKydKF+VRCxlQ9bpheehyAJH89dAkaLEq/j/RZXJIqcgsmPJKUP1Z28HA==
+
 "@types/webpack-dev-server@3":
   version "3.11.6"
   resolved "https://registry.npmmirror.com/@types/webpack-dev-server/-/webpack-dev-server-3.11.6.tgz#d8888cfd2f0630203e13d3ed7833a4d11b8a34dc"
