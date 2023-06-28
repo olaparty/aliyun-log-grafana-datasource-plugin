@@ -20,7 +20,14 @@ export class SLSVariableQueryEditor extends PureComponent<Props> {
     return (
       <>
         <div className="gf-form-inline">
-          <FormField labelWidth={6} inputWidth={30} value={query} onChange={this.onQueryTextChange} label="query" />
+          <FormField
+            style={{ fontFamily: 'Menlo, monospace' }}
+            labelWidth={6}
+            inputWidth={30}
+            value={query}
+            onChange={this.onQueryTextChange}
+            label="query"
+          />
         </div>
       </>
     );
