@@ -1,6 +1,6 @@
 {
   "name": "aliyun-log-service-datasource",
-  "version": "2.28",
+  "version": "2.29",
   "description": "Aliyun log service datasource (backend version)",
   "scripts": {
     "build": "grafana-toolkit plugin:build && mage",

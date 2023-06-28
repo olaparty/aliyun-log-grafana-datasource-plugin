@@ -48,6 +48,10 @@ export const keywords = [
     type: CompletionItemKind.Keyword,
   },
   {
+    label: 'GROUP',
+    type: CompletionItemKind.Keyword,
+  },
+  {
     label: 'WHERE',
     type: CompletionItemKind.Keyword,
   },
