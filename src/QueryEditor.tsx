@@ -7,14 +7,16 @@ import { QueryEditorProps } from '@grafana/data';
 
 import { SLSDataSource } from './datasource';
 import { defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
-import { xColInfoSeries, yColInfoSeries } from './const';
+import { version, xColInfoSeries, yColInfoSeries } from './const';
 import MonacoQueryField from './SLS-monaco-editor/MonacoQueryField';
+import MonacoQueryFieldOld from 'SLS-monaco-editor/MonacoQueryFieldOld';
 
 // const { FormField } = LegacyForms;
 
 type Props = QueryEditorProps<SLSDataSource, SLSQuery, SLSDataSourceOptions>;
 
 export class SLSQueryEditor extends PureComponent<Props> {
+
   onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onChange, query } = this.props;
     onChange({ ...query, query: event.target.value });
@@ -56,22 +58,36 @@ export class SLSQueryEditor extends PureComponent<Props> {
           <InlineFormLabel width={6} className="query-keyword">
             Query
           </InlineFormLabel>
-          {/* <input
-            className="gf-form-input"
-            value={query}
-            onChange={this.onQueryTextChange}
-            onBlur={this.onQueryTextChange}
-            style={{ fontFamily: 'Menlo, monospace' }}
-          ></input> */}
-          <MonacoQueryField
-            onChange={this.onQueryTextChangeString}
-            onRunQuery={this.onQueryTextChangeWithRunQuery}
-            onBlur={this.onQueryTextChangeString}
-            initialValue={query ?? ''}
-            languageProvider={{} as any}
-            history={[]}
-            placeholder={''}
-          />
+          {version === '' || version.startsWith('8.0') || version.startsWith('8.1') || version.startsWith('8.2') || version.startsWith('7') ? (
+            // <input
+            //   className="gf-form-input"
+            //   value={query}
+            //   onChange={this.onQueryTextChange}
+            //   onBlur={this.onQueryTextChange}
+            //   style={{ fontFamily: 'Menlo, monospace' }}
+            // ></input>
+            <div style={{ width: '100%' }}>
+              <MonacoQueryFieldOld
+                onChange={this.onQueryTextChangeString}
+                onRunQuery={this.onQueryTextChangeWithRunQuery}
+                onBlur={this.onQueryTextChangeString}
+                initialValue={query ?? ''}
+                languageProvider={{} as any}
+                history={[]}
+                placeholder={''}
+              />
+            </div>
+          ) : (
+            <MonacoQueryField
+              onChange={this.onQueryTextChangeString}
+              onRunQuery={this.onQueryTextChangeWithRunQuery}
+              onBlur={this.onQueryTextChangeString}
+              initialValue={query ?? ''}
+              languageProvider={{} as any}
+              history={[]}
+              placeholder={''}
+            />
+          )}
         </div>
         <div className="gf-form-inline" style={{ lineHeight: '32px', verticalAlign: 'center' }}>
           <InlineField label={'ycol'} labelWidth={12}>
@@ -105,7 +121,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
               prefix={<Icon name="x" />}
               value={xcol}
               onChange={this.onXChange}
-              label="xcol(time)"
+              label="xcol"
               suffix={
                 <Tooltip
                   content={

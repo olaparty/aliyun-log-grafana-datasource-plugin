@@ -53,3 +53,5 @@ export const yColInfoSeries = [
     value: '[col1#:#col2] Applicable to bar and SLS metricStore, col1 is the aggregation column, col2 is other columns',
   },
 ];
+
+export const version = (window as any)?.grafanaBootData?.settings?.buildInfo?.version ?? '';
