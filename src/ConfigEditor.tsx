@@ -34,6 +34,15 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
     onOptionsChange({ ...options, jsonData });
   };
 
+  onRoleArnChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { onOptionsChange, options } = this.props;
+    const jsonData = {
+      ...options.jsonData,
+      roleArn: event.target.value,
+    };
+    onOptionsChange({ ...options, jsonData });
+  };
+
   // Secure field (only sent to the backend)
   onAKIDChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
@@ -164,6 +173,17 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
               onChange={this.onAKSecretChange}
             />
           </div>
+        </div>
+        <hr />
+        <div className="gf-form-inline">
+          <FormField
+            label="roleArn"
+            labelWidth={8}
+            inputWidth={25}
+            onChange={this.onRoleArnChange}
+            value={jsonData.roleArn || ''}
+            placeholder="配置STS跳转(选填, optional)"
+          />
         </div>
       </div>
     );

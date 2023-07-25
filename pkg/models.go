@@ -11,6 +11,7 @@ type LogSource struct {
 	Endpoint        string
 	Project         string `json:"project"`
 	LogStore        string `json:"logstore"`
+	RoleArn         string `json:"roleArn"`
 	AccessKeyId     string
 	AccessKeySecret string
 }

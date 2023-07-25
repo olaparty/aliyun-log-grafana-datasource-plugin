@@ -54,4 +54,24 @@ export const yColInfoSeries = [
   },
 ];
 
+export const xSelectOptions = [
+  {
+    label: 'TimeSeries / Custom',
+    value: 'custom',
+    description: '时序数据 Timeseries 自定义【时间列 Time colomn】，或自定义x轴输入',
+  },
+  { label: 'Table / Log', value: '', description: '表格或日志 table or log' },
+  { label: 'Stat / Gauge', value: 'stat', description: '单值图格式 gauge/stat graph' },
+  { label: 'Pie', value: 'pie', description: '饼图格式 pie graph' },
+  { label: 'Bar', value: 'bar', description: '柱状图格式 bar graph' },
+  { label: 'Trace', value: 'trace', description: 'Trace格式 Trace graph' },
+  { label: 'Map', value: 'map', description: '地图格式 map graph' },
+  // {
+  //   label: 'Option with description and image',
+  //   value: 2,
+  //   description: 'This is a very elaborate description, describing all the wonders in the world.',
+  //   imgUrl: 'https://placekitten.com/40/40',
+  // },
+]
+
 export const version = (window as any)?.grafanaBootData?.settings?.buildInfo?.version ?? '';

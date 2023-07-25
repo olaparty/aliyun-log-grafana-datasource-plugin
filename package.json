@@ -1,10 +1,12 @@
 {
   "name": "aliyun-log-service-datasource",
-  "version": "2.29",
+  "version": "2.30",
   "description": "Aliyun log service datasource (backend version)",
   "scripts": {
     "build": "grafana-toolkit plugin:build && mage",
     "build-front": "grafana-toolkit plugin:build",
+    "build-back": "mage",
+    "dev-back": "mage; launchctl stop com.aliyun.sls.autoGrafana; launchctl start com.aliyun.sls.autoGrafana",
     "test": "grafana-toolkit plugin:test",
     "dev": "grafana-toolkit plugin:dev",
     "watch": "grafana-toolkit plugin:dev --watch",
@@ -26,5 +28,9 @@
   },
   "engines": {
     "node": ">=14"
+  },
+  "dependencies": {
+    "js-base64": "^3.7.5",
+    "urijs": "^1.19.11"
   }
 }

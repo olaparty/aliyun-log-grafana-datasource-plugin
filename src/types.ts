@@ -23,6 +23,7 @@ export interface SLSDataSourceOptions extends DataSourceJsonData {
   endpoint?: string;
   project?: string;
   logstore?: string;
+  roleArn?: string;
 }
 
 /**
