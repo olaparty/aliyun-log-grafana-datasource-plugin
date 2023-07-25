@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"io/ioutil"
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 func main() {
@@ -22,7 +23,15 @@ func main() {
 	// new datasource instance created using NewSampleDatasource factory.
 
 	loadConfig()
-	if err := datasource.Manage("aliyun-log-backend-datasource", NewSLSDatasource, datasource.ManageOpts{}); err != nil {
+	// if err := datasource.Manage("aliyun-log-backend-datasource", NewSLSDatasource, datasource.ManageOpts{}); err != nil {
+	// 	log.DefaultLogger.Error(err.Error())
+	// 	os.Exit(1)
+	// }
+	err := datasource.Serve(NewSLSDatasource())
+	grafanaVersion := os.Getenv("GF_VERSION")
+	log.DefaultLogger.Info("GF_VERSION", grafanaVersion)
+
+	if err != nil {
 		log.DefaultLogger.Error(err.Error())
 		os.Exit(1)
 	}

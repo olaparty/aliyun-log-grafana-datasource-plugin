@@ -24,7 +24,11 @@ interface MonacoPromise {
   monaco: Monaco;
 }
 
-const QueryField: React.FC<Props> = ({ initialValue: query, onChange }) => {
+const QueryField: React.FC<Props & { disableMultiLine?: boolean }> = ({
+  initialValue: query,
+  onChange,
+  disableMultiLine,
+}) => {
   const monacoPromiseRef = useRef<Deferred<MonacoPromise>>();
   const [queryHeight, setQueryHeight] = useState<number>(30);
   const handleEditorMount = useCallback((editor: MonacoEditor, monaco: Monaco) => {
@@ -46,26 +50,28 @@ const QueryField: React.FC<Props> = ({ initialValue: query, onChange }) => {
           monacoOptions={{ contextmenu: true, codeLens: true, overviewRulerBorder: true }}
         />
       </div>
-      <div style={{ width: '60px', height: '100%', display: 'inline-block', float: 'right' }}>
-        <Button
-          icon="angle-up"
-          variant="secondary"
-          size="sm"
-          disabled={queryHeight === 30}
-          onClick={() => {
-            setQueryHeight(queryHeight - 30);
-          }}
-        />
-        <Button
-          icon="angle-down"
-          variant="secondary"
-          size="sm"
-          disabled={queryHeight === 120}
-          onClick={() => {
-            setQueryHeight(queryHeight + 30);
-          }}
-        />
-      </div>
+      {!disableMultiLine && (
+        <div style={{ width: '60px', height: '100%', display: 'inline-block', float: 'right' }}>
+          <Button
+            icon="angle-up"
+            variant="secondary"
+            size="sm"
+            disabled={queryHeight === 30}
+            onClick={() => {
+              setQueryHeight(queryHeight - 30);
+            }}
+          />
+          <Button
+            icon="angle-down"
+            variant="secondary"
+            size="sm"
+            disabled={queryHeight === 120}
+            onClick={() => {
+              setQueryHeight(queryHeight + 30);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

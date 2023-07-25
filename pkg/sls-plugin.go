@@ -15,6 +15,7 @@ import (
 	sls "github.com/aliyun/aliyun-log-go-sdk"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -37,13 +38,21 @@ var (
 )
 
 // NewSampleDatasource creates a new datasource instance.
-func NewSLSDatasource(_ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	return &SlsDatasource{}, nil
+// func NewSLSDatasource(_ backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+func NewSLSDatasource() datasource.ServeOpts {
+	ds := &SlsDatasource{}
+	return datasource.ServeOpts{
+		CheckHealthHandler:  ds,
+		QueryDataHandler:    ds,
+		CallResourceHandler: newResourceHandler(ds),
+	}
 }
 
 // SampleDatasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
-type SlsDatasource struct{}
+type SlsDatasource struct {
+	backend.DataSourceInstanceSettings
+}
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
