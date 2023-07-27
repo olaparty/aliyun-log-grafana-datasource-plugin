@@ -1,5 +1,31 @@
 # Changelog
 
+# 2.30 (2023-07-25)
+- 优化SLS Grafana插件后端结构，现支持加入自定义Resource API功能。
+- 引入gotoSLS功能，用户可以方便地跳转到SLS控制台进行查询，和体验SLS控制台更强大的功能，跳转附带当前Grafana的query、时间信息。在DataSource界面配置roleArn可实现STS跳转，若不配置，则按照正常直接访问逻辑跳转（需要登录控制台）。
+   - **注意：若配置STS跳转，为权限安全考虑，需要满足以下两个条件**：
+      - **配置DataSource的accessKey对应的用户，需要有**`**AliyunRAMReadOnlyAccess**`**权限**
+      - **配置DataSource的roleArn，里面的权限策略，必须有且只有**`**AliyunLogReadOnlyAccess**`
+   - 原理参考：[控制台内嵌及分享](https://help.aliyun.com/document_detail/74971.html)
+- 优化`xcol`的表现形式，现以下拉框的形式规范推荐输入。兼顾兼容性与自定义输入。
+- Variable 编辑页面，SLS DataSource同样引入Monaco Editor，且自动识别grafana版本切换新老显示。
+- 修复`xcol`与`ycol`输入框末尾Tips 在Grafana 8.3.x及以下无法显示的问题。
+- 修复部分适配问题。
+
+![image.png](https://cdn.nlark.com/yuque/0/2023/png/21832175/1690257487839-24ccca2d-4fad-4011-9f18-300ceb876a26.png#averageHue=%231d2023&clientId=ud2e482ee-2fd6-4&from=paste&height=523&id=uc82855a6&originHeight=523&originWidth=1723&originalType=binary&ratio=1&rotation=0&showTitle=false&size=531654&status=done&style=none&taskId=u6031a614-f570-4a7b-a959-f1fda0001c8&title=&width=1723)<br />![image.png](https://cdn.nlark.com/yuque/0/2023/png/21832175/1690257391475-dae60eef-2191-42ab-90e7-d79b5319dfcd.png#averageHue=%231c1f21&clientId=ud2e482ee-2fd6-4&from=paste&height=349&id=u2c395060&originHeight=349&originWidth=1719&originalType=binary&ratio=1&rotation=0&showTitle=false&size=366996&status=done&style=none&taskId=u22e237d7-d4ad-4a9f-aae2-8ce25dc0915&title=&width=1719)
+
+- Optimize the back-end structure of the SLS Grafana plug-in, and now support the addition of custom Resource API functions.
+- Introducing the gotoSLS function, users can easily jump to the SLS console to query and experience more powerful functions of the SLS console, and the jump includes the current Grafana query and time information. Configuring roleArn on the DataSource interface can realize STS jumping. If not configured, it will jump according to the normal direct access logic (login to the console is required).
+   - **Note: If STS redirection is configured, the following two conditions need to be met for permission security considerations:**
+      - **To configure the user corresponding to the accessKey of the DataSource, `AliyunRAMReadOnlyAccess` permission is required**
+      - **Configure the roleArn of DataSource, the permission policy inside must have and only `AliyunLogReadOnlyAccess`**
+   - Principle reference: [Console embedding and sharing](https://help.aliyun.com/document_detail/74971.html)
+- Optimize the expression form of `xcol`, and now standardize the recommended input in the form of a drop-down box. Take into account compatibility and custom input.
+- On the Variable editing page, SLS DataSource also introduces Monaco Editor, and automatically recognizes the grafana version to switch between the new and old displays.
+- Fix the problem that Tips at the end of the `xcol` and `ycol` input boxes cannot be displayed in Grafana 8.3.x and below.
+- Fix some adaptation problems.
+
+
 
 # 2.29 (2023-06-29)
 - 全新SLS Query编写体验，引入Monaco Editor，支持语法高亮显示，关键字、函数自动提示等功能。
