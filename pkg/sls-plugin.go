@@ -659,7 +659,7 @@ func (ds *SlsDatasource) BuildTimingGraph(logs []map[string]string, xcol string,
 }
 
 func (ds *SlsDatasource) BuildTable(logs []map[string]string, xcol string, ycols []string, keys []string, frames *data.Frames) {
-	frame := data.NewFrame("response")
+	frame := data.NewFrame(strings.Join(ycols, ","))
 
 	fieldMap := make(map[string][]string)
 
@@ -709,7 +709,7 @@ func (ds *SlsDatasource) BuildTable(logs []map[string]string, xcol string, ycols
 }
 
 func (ds *SlsDatasource) BuildLogs(logs []map[string]string, ycols []string, frames *data.Frames) {
-	frame := data.NewFrame("response")
+	frame := data.NewFrame("")
 	frame.Meta = &data.FrameMeta{
 		PreferredVisualization: data.VisTypeLogs,
 	}
