@@ -377,22 +377,27 @@ func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string,
 		return
 	}
 	ds.SortLogs(logs, xcol)
-	metricName := ycols[1]
+	metricNames := strings.Split(ycols[1], ",")
+	metricMap := make(map[string]bool)
+	for _, n := range metricNames {
+		metricMap[n] = true
+	}
 	var labelNames []string
 	for k := range logs[0] {
-		if k != "__source__" && k != "__time__" && k != metricName && k != xcol {
+		if k != "__source__" && k != "__time__" && !metricMap[k] && k != xcol {
 			labelNames = append(labelNames, k)
 		}
 	}
 	sort.Strings(labelNames)
 	timeFields := make(map[string][]time.Time)
-	metricFields := make(map[string][]float64)
-
+	nameMetricFields := make(map[string]map[string][]float64)
+	for _, n := range metricNames {
+		nameMetricFields[n] = make(map[string][]float64)
+	}
 	frameLabelsMap := make(map[string]map[string]string)
 
 	for _, alog := range logs {
 		timeVal := alog[xcol]
-		metricVal := alog[metricName]
 		labels := map[string]string{}
 		labelsKey := ""
 		for _, l := range labelNames {
@@ -407,20 +412,29 @@ func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string,
 		} else {
 			timeFields[labelsKey] = []time.Time{toTime(timeVal)}
 		}
-		floatV, err := strconv.ParseFloat(metricVal, 64)
-		if err != nil {
-			log.DefaultLogger.Info("BuildFlowGraphV2", "ParseFloat", err, "value", metricVal)
-		}
-		if _, ok := metricFields[labelsKey]; ok {
-			metricFields[labelsKey] = append(metricFields[labelsKey], floatV)
-		} else {
-			metricFields[labelsKey] = []float64{floatV}
+		for _, n := range metricNames {
+			metricVal := alog[n]
+			floatV, err := strconv.ParseFloat(metricVal, 64)
+			if err != nil {
+				log.DefaultLogger.Info("BuildFlowGraphV2", "ParseFloat", err, "value", metricVal)
+			}
+			if _, ok := nameMetricFields[n][labelsKey]; ok {
+				nameMetricFields[n][labelsKey] = append(nameMetricFields[n][labelsKey], floatV)
+			} else {
+				nameMetricFields[n][labelsKey] = []float64{floatV}
+			}
 		}
 	}
 	for k, v := range timeFields {
 		frame := data.NewFrame("")
 		frame.Fields = append(frame.Fields, data.NewField("Time", nil, v))
-		frame.Fields = append(frame.Fields, data.NewField("Value", frameLabelsMap[k], metricFields[k]))
+		if len(metricNames) == 1 {
+			frame.Fields = append(frame.Fields, data.NewField("Value", frameLabelsMap[k], nameMetricFields[metricNames[0]][k]))
+		} else {
+			for _, n := range metricNames {
+				frame.Fields = append(frame.Fields, data.NewField(n, frameLabelsMap[k], nameMetricFields[n][k]))
+			}
+		}
 		*frames = append(*frames, frame)
 	}
 }
