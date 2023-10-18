@@ -727,43 +727,44 @@ func (ds *SlsDatasource) BuildLogs(logs []map[string]string, ycols []string, fra
 	frame.Meta = &data.FrameMeta{
 		PreferredVisualization: data.VisTypeLogs,
 	}
-	yset := make(map[string]bool)
-	for _, ycol := range ycols {
-		yset[ycol] = true
-	}
+	fieldMap := make(map[string][]string)
+	var keyArr []string
 	var times []time.Time
+	if len(ycols) == 1 && ycols[0] == "" {
+		for _, alog := range logs {
+			for k := range alog {
+				if _, ok := fieldMap[k]; !ok {
+					fieldMap[k] = make([]string, 0)
+					keyArr = append(keyArr, k)
+				}
+			}
+		}
+	} else {
+		for _, ycol := range ycols {
+			fieldMap[ycol] = make([]string, 0)
+			keyArr = append(keyArr, ycol)
+		}
+	}
 	var values []string
 	for _, alog := range logs {
 		message := ""
-		var keys []string
-		for k := range alog {
-			keys = append(keys, k)
+		for _, k := range keyArr {
+			fieldMap[k] = append(fieldMap[k], alog[k])
+			message = message + k + `="` + strings.ReplaceAll(alog[k], `"`, `'`) + `" `
 		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			v := alog[k]
-			if k == "__time__" {
-				floatValue, err := strconv.ParseFloat(v, 64)
-				if err != nil {
-					log.DefaultLogger.Info("BuildLogs", "ParseTime", err)
-					continue
-				}
-				times = append(times, time.Unix(int64(floatValue), 0))
-			}
-			if len(ycols) > 0 && ycols[0] != "" {
-				if yset[k] {
-					message = message + k + `="` + strings.ReplaceAll(v, `"`, `'`) + `" `
-				}
-			} else {
-				message = message + k + `="` + strings.ReplaceAll(v, `"`, `'`) + `" `
-			}
-		}
+		timeValue, _ := strconv.ParseFloat(alog["__time__"], 64)
+		t := time.Unix(int64(timeValue), 0)
+		times = append(times, t)
 		values = append(values, message)
 	}
-	frame.Fields = append(frame.Fields,
-		data.NewField("time", nil, times),
-		data.NewField("message", nil, values),
-	)
+
+	if len(times) > 0 {
+		frame.Fields = append(frame.Fields, data.NewField("time", nil, times))
+	}
+	frame.Fields = append(frame.Fields, data.NewField("message", nil, values))
+	for _, v := range keyArr {
+		frame.Fields = append(frame.Fields, data.NewField(v, nil, fieldMap[v]))
+	}
 	*frames = append(*frames, frame)
 }
 
