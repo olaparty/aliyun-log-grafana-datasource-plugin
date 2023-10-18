@@ -1,5 +1,19 @@
 # Changelog
 
+# 2.31 (2023-10-18)
+- 支持日志图在 Grafana v10 的展示，日志图可以指定想展示的字段，ycol格式为`字段1,字段2`
+- 流图支持多条线，ycol格式为`#:#指标1,指标2`
+- 修改表格区域的名字为ycol，使多个表格在同一个图表时，可以区分。
+
+![image.png](https://cdn.nlark.com/yuque/0/2023/png/182537/1697599988480-6ddc340d-9b64-4531-abbf-748eff4c0df9.png#averageHue=%231e2126&clientId=ue09f9ab6-6409-4&from=paste&height=480&id=u63975600&originHeight=960&originWidth=1630&originalType=binary&ratio=2&rotation=0&showTitle=false&size=363161&status=done&style=none&taskId=u01fdf5fe-b863-44da-b5f8-a3ae4512280&title=&width=815)
+
+
+![image.png](https://cdn.nlark.com/yuque/0/2023/png/182537/1697600032996-be73fb93-a181-4f56-a42d-9ebdba626227.png#averageHue=%23202327&clientId=ue09f9ab6-6409-4&from=paste&height=515&id=u8bdbba62&originHeight=1030&originWidth=2130&originalType=binary&ratio=2&rotation=0&showTitle=false&size=562357&status=done&style=none&taskId=uf3ac8398-be19-4a16-abc7-740eebef31c&title=&width=1065)
+
+- Supports the display of log graphs in Grafana v10. Log graphs can specify the fields you want to display. The ycol format is `Field 1, Field 2`
+- The flow graph supports multiple lines, and the ycol format is `#:#Indicator 1,Indicator 2`
+- Modify the name of the table area to ycol so that multiple tables can be distinguished when they are in the same chart.
+
 # 2.30 (2023-07-25)
 - 优化SLS Grafana插件后端结构，现支持加入自定义Resource API功能。
 - 引入gotoSLS功能，用户可以方便地跳转到SLS控制台进行查询，和体验SLS控制台更强大的功能，跳转附带当前Grafana的query、时间信息。在DataSource界面配置roleArn可实现STS跳转，若不配置，则按照正常直接访问逻辑跳转（需要登录控制台）。

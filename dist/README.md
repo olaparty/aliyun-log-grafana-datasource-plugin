@@ -4,7 +4,7 @@
 日志服务 SLS 是云原生观测分析平台，为Log/Metric/Trace等数据提供大规模、低成本、实时平台化服务。一站式提供数据采集、加工、分析、告警可视化与投递功能，全面提升研发、运维、运营和安全等场景数字化能力。[官方文档](https://www.aliyun.com/product/sls)<br />本仓库为阿里云日志服务Grafana数据源插件。使用本插件的前提，需要您使用日志服务产品，并拥有至少1个已配置采集的LogStore。
 <a name="zsCS1"></a>
 # 2. 安装
-依赖 Grafana 8.0 及以上版本 , Grafana 8.0 以下请使用1.0版本。<br />于[Release处下载](https://github.com/aliyun/aliyun-log-grafana-datasource-plugin/releases)本插件到grafana插件目录下，修改配置文件 , 然后重启grafana。
+依赖 Grafana 8.0 及以上版本 , Grafana 8.0 以下请使用1.0版本。<br />于[Release处下载](https://github.com/aliyun/aliyun-log-grafana-datasource-plugin/releases)本插件到grafana插件目录下，修改配置文件，在配置文件的[plugins] 节点中，设置 `allow_loading_unsigned_plugins = aliyun-log-service-datasource`， 然后重启grafana。
 
 - mac 
    - 插件目录： `/usr/local/var/lib/grafana/plugins`
