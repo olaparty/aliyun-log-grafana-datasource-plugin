@@ -377,22 +377,27 @@ func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string,
 		return
 	}
 	ds.SortLogs(logs, xcol)
-	metricName := ycols[1]
+	metricNames := strings.Split(ycols[1], ",")
+	metricMap := make(map[string]bool)
+	for _, n := range metricNames {
+		metricMap[n] = true
+	}
 	var labelNames []string
 	for k := range logs[0] {
-		if k != "__source__" && k != "__time__" && k != metricName && k != xcol {
+		if k != "__source__" && k != "__time__" && !metricMap[k] && k != xcol {
 			labelNames = append(labelNames, k)
 		}
 	}
 	sort.Strings(labelNames)
 	timeFields := make(map[string][]time.Time)
-	metricFields := make(map[string][]float64)
-
+	nameMetricFields := make(map[string]map[string][]float64)
+	for _, n := range metricNames {
+		nameMetricFields[n] = make(map[string][]float64)
+	}
 	frameLabelsMap := make(map[string]map[string]string)
 
 	for _, alog := range logs {
 		timeVal := alog[xcol]
-		metricVal := alog[metricName]
 		labels := map[string]string{}
 		labelsKey := ""
 		for _, l := range labelNames {
@@ -407,20 +412,29 @@ func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string,
 		} else {
 			timeFields[labelsKey] = []time.Time{toTime(timeVal)}
 		}
-		floatV, err := strconv.ParseFloat(metricVal, 64)
-		if err != nil {
-			log.DefaultLogger.Info("BuildFlowGraphV2", "ParseFloat", err, "value", metricVal)
-		}
-		if _, ok := metricFields[labelsKey]; ok {
-			metricFields[labelsKey] = append(metricFields[labelsKey], floatV)
-		} else {
-			metricFields[labelsKey] = []float64{floatV}
+		for _, n := range metricNames {
+			metricVal := alog[n]
+			floatV, err := strconv.ParseFloat(metricVal, 64)
+			if err != nil {
+				log.DefaultLogger.Info("BuildFlowGraphV2", "ParseFloat", err, "value", metricVal)
+			}
+			if _, ok := nameMetricFields[n][labelsKey]; ok {
+				nameMetricFields[n][labelsKey] = append(nameMetricFields[n][labelsKey], floatV)
+			} else {
+				nameMetricFields[n][labelsKey] = []float64{floatV}
+			}
 		}
 	}
 	for k, v := range timeFields {
 		frame := data.NewFrame("")
 		frame.Fields = append(frame.Fields, data.NewField("Time", nil, v))
-		frame.Fields = append(frame.Fields, data.NewField("Value", frameLabelsMap[k], metricFields[k]))
+		if len(metricNames) == 1 {
+			frame.Fields = append(frame.Fields, data.NewField("Value", frameLabelsMap[k], nameMetricFields[metricNames[0]][k]))
+		} else {
+			for _, n := range metricNames {
+				frame.Fields = append(frame.Fields, data.NewField(n, frameLabelsMap[k], nameMetricFields[n][k]))
+			}
+		}
 		*frames = append(*frames, frame)
 	}
 }
@@ -659,7 +673,7 @@ func (ds *SlsDatasource) BuildTimingGraph(logs []map[string]string, xcol string,
 }
 
 func (ds *SlsDatasource) BuildTable(logs []map[string]string, xcol string, ycols []string, keys []string, frames *data.Frames) {
-	frame := data.NewFrame("response")
+	frame := data.NewFrame(strings.Join(ycols, ","))
 
 	fieldMap := make(map[string][]string)
 
@@ -709,47 +723,48 @@ func (ds *SlsDatasource) BuildTable(logs []map[string]string, xcol string, ycols
 }
 
 func (ds *SlsDatasource) BuildLogs(logs []map[string]string, ycols []string, frames *data.Frames) {
-	frame := data.NewFrame("response")
+	frame := data.NewFrame("")
 	frame.Meta = &data.FrameMeta{
 		PreferredVisualization: data.VisTypeLogs,
 	}
-	yset := make(map[string]bool)
-	for _, ycol := range ycols {
-		yset[ycol] = true
-	}
+	fieldMap := make(map[string][]string)
+	var keyArr []string
 	var times []time.Time
+	if len(ycols) == 1 && ycols[0] == "" {
+		for _, alog := range logs {
+			for k := range alog {
+				if _, ok := fieldMap[k]; !ok {
+					fieldMap[k] = make([]string, 0)
+					keyArr = append(keyArr, k)
+				}
+			}
+		}
+	} else {
+		for _, ycol := range ycols {
+			fieldMap[ycol] = make([]string, 0)
+			keyArr = append(keyArr, ycol)
+		}
+	}
 	var values []string
 	for _, alog := range logs {
 		message := ""
-		var keys []string
-		for k := range alog {
-			keys = append(keys, k)
+		for _, k := range keyArr {
+			fieldMap[k] = append(fieldMap[k], alog[k])
+			message = message + k + `="` + strings.ReplaceAll(alog[k], `"`, `'`) + `" `
 		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			v := alog[k]
-			if k == "__time__" {
-				floatValue, err := strconv.ParseFloat(v, 64)
-				if err != nil {
-					log.DefaultLogger.Info("BuildLogs", "ParseTime", err)
-					continue
-				}
-				times = append(times, time.Unix(int64(floatValue), 0))
-			}
-			if len(ycols) > 0 && ycols[0] != "" {
-				if yset[k] {
-					message = message + k + `="` + strings.ReplaceAll(v, `"`, `'`) + `" `
-				}
-			} else {
-				message = message + k + `="` + strings.ReplaceAll(v, `"`, `'`) + `" `
-			}
-		}
+		timeValue, _ := strconv.ParseFloat(alog["__time__"], 64)
+		t := time.Unix(int64(timeValue), 0)
+		times = append(times, t)
 		values = append(values, message)
 	}
-	frame.Fields = append(frame.Fields,
-		data.NewField("time", nil, times),
-		data.NewField("message", nil, values),
-	)
+
+	if len(times) > 0 {
+		frame.Fields = append(frame.Fields, data.NewField("time", nil, times))
+	}
+	frame.Fields = append(frame.Fields, data.NewField("message", nil, values))
+	for _, v := range keyArr {
+		frame.Fields = append(frame.Fields, data.NewField(v, nil, fieldMap[v]))
+	}
 	*frames = append(*frames, frame)
 }
 
