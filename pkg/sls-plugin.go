@@ -631,24 +631,29 @@ func (ds *SlsDatasource) BuildTimingGraph(logs []map[string]string, xcol string,
 	} else {
 		frame = data.NewFrame("")
 	}
-	fieldMap := make(map[string][]float64)
+	fieldMap := make(map[string][]*float64)
 	var times []time.Time
 	if len(ycols) == 1 && ycols[0] == "" && len(keys) > 0 {
 		ycols = keys
 	}
 	for _, v := range ycols {
 		if v != xcol {
-			fieldMap[v] = make([]float64, 0)
+			fieldMap[v] = make([]*float64, 0)
 		}
 	}
 	for _, alog := range logs {
 		for k, v := range alog {
 			if fieldMap[k] != nil {
-				floatV, err := strconv.ParseFloat(v, 64)
-				if err != nil {
-					log.DefaultLogger.Info("BuildTimingGraph", "ParseFloat", err, "value", v)
+				// 判断一下这个v 是不是'null'
+				if v == "null" {
+					fieldMap[k] = append(fieldMap[k], nil)
+				} else {
+					floatV, err := strconv.ParseFloat(v, 64)
+					if err != nil {
+						log.DefaultLogger.Info("BuildTimingGraph", "ParseFloat", err, "value", v)
+					}
+					fieldMap[k] = append(fieldMap[k], &floatV)
 				}
-				fieldMap[k] = append(fieldMap[k], floatV)
 			}
 			if xcol != "" && xcol == k {
 				times = append(times, toTime(v))
