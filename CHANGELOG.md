@@ -1,5 +1,10 @@
 # Changelog
 
+# 2.32 (2023-04-16)
+- 支持时序图断点展示，通过 time_series(`时间列`, `补全窗口`, `%Y-%m-%d %H:%i:%s`, `null`) 补 null 值进行断点展示
+   - time_series 参考：[time_series时间补全函数说明](https://help.aliyun.com/zh/sls/user-guide/date-and-time-functions-1?spm=a2c4g.11186623.0.i10#section-wsz-wt2-4fb)
+![image.png](https://img.alicdn.com/imgextra/i2/O1CN01HzGO5d1Xg48MpyJHS_!!6000000002952-0-tps-3116-1144.jpg)
+
 # 2.31 (2023-10-18)
 - 支持日志图在 Grafana v10 的展示，日志图可以指定想展示的字段，ycol格式为`字段1,字段2`
 - 流图支持多条线，ycol格式为`#:#指标1,指标2`
