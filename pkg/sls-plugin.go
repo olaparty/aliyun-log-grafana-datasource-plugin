@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
@@ -142,9 +145,9 @@ func (ds *SlsDatasource) CheckHealth(_ context.Context, req *backend.CheckHealth
 	var status = backend.HealthStatusOk
 	var message = "Data source is working"
 
-	from := time.Now().Unix()
-	_, err = client.GetLogs(config.Project, config.LogStore, "",
-		from-60, from, "* | select count(*)", 0, 0, true)
+	log.DefaultLogger.Info("CheckHealth", "project", config.Project, "client", client)
+	// 拿当前 Project 的信息
+	_, err = client.GetProject(config.Project)
 	if err != nil {
 		status = backend.HealthStatusError
 		message = err.Error()
@@ -267,11 +270,47 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	from := query.TimeRange.From.Unix()
 	to := query.TimeRange.To.Unix()
 
-	log.DefaultLogger.Info("QueryLogs", "queryInfo", queryInfo)
-
 	var ycols []string
 	offset := (queryInfo.CurrentPage - 1) * queryInfo.LogsPerPage
-	getLogsResp, err := client.GetLogs(logSource.Project, logSource.LogStore, "",
+	var logStore string
+	if queryInfo.LogStore != "" {
+		logStore = queryInfo.LogStore
+	} else {
+		logStore = logSource.LogStore
+	}
+
+	// 如果 logstore 为空 返回错误
+	if logStore == "" {
+		response.Error = errors.New("logStore is empty, please select a logstore")
+		ch <- Result{
+			refId:        refId,
+			dataResponse: response,
+		}
+		return
+	}
+
+	// 如果是 metric 类型 直连 Prometheus 获取数据
+	if queryInfo.Type == "metricstore" {
+		var metricFrames data.Frames
+		err := ds.getMetricLogs(ch, query, queryInfo, logSource, response, &metricFrames)
+
+		if err != nil {
+			response.Error = err
+			ch <- Result{
+				refId:        refId,
+				dataResponse: response,
+			}
+		} else {
+			response.Frames = metricFrames
+			ch <- Result{
+				refId:        refId,
+				dataResponse: response,
+			}
+		}
+		return
+	}
+
+	getLogsResp, err := client.GetLogs(logSource.Project, logStore, "",
 		from, to, queryInfo.Query, queryInfo.LogsPerPage, offset, true)
 	if err != nil {
 		log.DefaultLogger.Error("GetLogs ", "query : ", queryInfo.Query, "error ", err)
@@ -370,6 +409,135 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 		refId:        refId,
 		dataResponse: response,
 	}
+}
+
+func (ds *SlsDatasource) getMetricLogs(_ chan Result, query backend.DataQuery, queryInfo *QueryInfo, logSource *LogSource, response backend.DataResponse, frames *data.Frames) error {
+	project := logSource.Project
+	endpoint := logSource.Endpoint
+	headers := logSource.Headers
+	metricStore := queryInfo.LogStore
+	queryType := queryInfo.QueryType
+	intervalMs := queryInfo.IntervalMs
+
+	// 判断如果 IntervalMs <= 0 则设置为 15000
+	if intervalMs <= 0 {
+		intervalMs = 15000
+	}
+
+	// 根据 queryType 动态调整 URL 的路径部分
+	var apiPath string
+	if queryType == "instant" {
+		apiPath = "query"
+	} else {
+		apiPath = "query_range"
+	}
+
+	baseUrl := fmt.Sprintf("https://%s.%s/prometheus/%s/%s/api/v1/%s", project, endpoint, project, metricStore, apiPath)
+	from := query.TimeRange.From.Unix()
+	to := query.TimeRange.To.Unix()
+	queryStr := queryInfo.Query
+
+	log.DefaultLogger.Info("getMetricLogs-intervalMs", "intervalMs", intervalMs)
+	step := (time.Duration(intervalMs) * time.Millisecond).String()
+	if queryInfo.Step != "" {
+		step = queryInfo.Step
+	}
+
+	urlVal := url.Values{}
+	var uri string
+
+	switch apiPath {
+	case "query":
+		urlVal.Add("query", queryStr)
+		urlVal.Add("time", strconv.FormatInt(to, 10))
+		uri = fmt.Sprintf("%s?%v", baseUrl, urlVal.Encode())
+	case "query_range":
+		urlVal.Add("query", queryStr)
+		urlVal.Add("start", strconv.FormatInt(from, 10))
+		urlVal.Add("end", strconv.FormatInt(to, 10))
+		// 判断 step 是不是空 则使用默认值
+		urlVal.Add("step", step)
+
+		uri = fmt.Sprintf("%s?%v", baseUrl, urlVal.Encode())
+	}
+
+	log.DefaultLogger.Info("getMetricLogs-URL", "uri", uri)
+
+	// 创建 HTTP 请求
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(logSource.AccessKeyId, logSource.AccessKeySecret)
+
+	// 判断 headers 是否存在，存在则添加
+	if len(headers) > 0 {
+		for _, header := range headers {
+			req.Header.Set(header.Name, header.Value)
+		}
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.DefaultLogger.Error("getMetricLogs ", "queryInfo: ", queryInfo, "error ", err)
+		return err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body) // 需要读完body内容。
+	if err != nil {
+		log.DefaultLogger.Info("getMetricLogs-read-body-err", "err", err)
+		return err
+	}
+	// 拿到 body 中的 data
+	// 解析 JSON 数据到结构体
+	var metricLogs MetricLogs
+	if err := json.Unmarshal([]byte(body), &metricLogs); err != nil {
+		log.DefaultLogger.Info("parse-body-err", "err", err)
+		return err
+	}
+
+	for _, metricData := range metricLogs.Data.Result {
+		var frame *data.Frame
+		if compatible {
+			frame = data.NewFrame("response")
+		} else {
+			frame = data.NewFrame("")
+		}
+
+		var times []time.Time = make([]time.Time, 0)
+		var values []float64 = make([]float64, 0)
+
+		if apiPath == "query_range" {
+			// 遍历result.values，将values中的数据添加到frame.Field
+			for _, value := range metricData.Values {
+				metricValue, err := strconv.ParseFloat(value[1].(string), 64)
+				if err != nil {
+					log.DefaultLogger.Info("ParseFloat-metricData", "ParseFloat", err, "metricValue", metricValue)
+				}
+				times = append(times, time.Unix(int64(value[0].(float64)), 0))
+				values = append(values, metricValue)
+			}
+		} else {
+			var instantValue []interface{} = metricData.Value
+			metricValue, err := strconv.ParseFloat(instantValue[1].(string), 64)
+			if err != nil {
+				log.DefaultLogger.Info("ParseFloat-metricData", "ParseFloat", err, "metricValue", metricValue)
+			}
+			times = append(times, time.Unix(int64(instantValue[0].(float64)), 0))
+			values = append(values, metricValue)
+		}
+
+		frame.Fields = append(frame.Fields, data.NewField("time", nil, times))
+		frame.Fields = append(frame.Fields, data.NewField("value", metricData.Metric, values).SetConfig(&data.FieldConfig{
+			DisplayNameFromDS: formatDisplayName(queryInfo.LegendFormat, metricData.Metric, queryInfo.Query),
+		}))
+
+		*frames = append(*frames, frame)
+	}
+
+	return nil
 }
 
 func (ds *SlsDatasource) BuildFlowGraphV2(logs []map[string]string, xcol string, ycols []string, frames *data.Frames) {
@@ -861,4 +1029,43 @@ func toTime(sTime string) (t time.Time) {
 		t, _ = time.ParseInLocation("2006-01-02 15:04:05", s, local)
 	}
 	return
+}
+
+// 使用 labels 替换 format 中的占位符
+func formatDisplayName(format string, labels map[string]string, query string) string {
+	re := regexp.MustCompile(`{{\s*([^}]+)\s*}}`)
+	matches := re.FindAllStringSubmatch(format, -1)
+
+	// 标志是否所有占位符都能匹配
+	hasMatched := false
+
+	for _, match := range matches {
+		placeholder := match[0]
+		labelName := match[1]
+		if value, ok := labels[labelName]; ok {
+			format = strings.ReplaceAll(format, placeholder, value)
+			hasMatched = true
+		}
+	}
+
+	if !hasMatched {
+		// 如果有任何一个占位符没有对应的值，返回 labels 的字符串表示
+		var parts []string
+		// 对 labels 排序后拼接
+		var keys []string
+		for key := range labels {
+			keys = append(keys, key)
+		}
+		// 如果 labels 为空 就直接用 query
+		if len(keys) == 0 {
+			return query
+		}
+
+		sort.Strings(keys) // 对 keys 进行排序
+		for _, key := range keys {
+			parts = append(parts, fmt.Sprintf(`%s="%s"`, key, labels[key]))
+		}
+		return fmt.Sprintf(`{ %s }`, strings.Join(parts, ", "))
+	}
+	return format
 }

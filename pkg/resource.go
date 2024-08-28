@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	sls "github.com/aliyun/aliyun-log-go-sdk"
+
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
@@ -19,12 +21,73 @@ func newResourceHandler(ds *SlsDatasource) backend.CallResourceHandler {
 	// register route
 	mux.HandleFunc("/api/gotoSLS", ds.gotoSLS)
 	mux.HandleFunc("/api/version", ds.serveVersion)
+	mux.HandleFunc("/api/getLogstoreList", ds.getLogstoreList)
 
 	return httpadapter.New(mux)
 }
 
 func (ds *SlsDatasource) serveVersion(w http.ResponseWriter, r *http.Request) {
 	// Handle query request...
+}
+
+type ListLogstoresData struct {
+	Project       string
+	TelemetryType string
+}
+
+func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request) {
+	response := map[string]interface{}{
+		"data":    []map[string]interface{}{}, // 定义 data 为一个任意类型的对象数组
+		"res":     nil,
+		"message": "",
+	}
+
+	config, err := LoadSettings(httpadapter.PluginConfigFromContext(r.Context()))
+	if err != nil {
+		response["message"] = err.Error()
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	client := &sls.Client{
+		Endpoint:        config.Endpoint,
+		AccessKeyID:     config.AccessKeyId,
+		AccessKeySecret: config.AccessKeySecret,
+		UserAgent:       "grafana-go",
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		response["message"] = err.Error()
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// 解析request JSON 数据
+	var data ListLogstoresData
+	if err := json.Unmarshal(body, &data); err != nil {
+		response["message"] = err.Error()
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.DefaultLogger.Info("getBODY", "body", body, "bodyData", data)
+
+	// 拿当前 Project 的信息
+	list, err := client.ListLogStoreV2(data.Project, 0, 500, data.TelemetryType)
+	if err != nil {
+		response["message"] = err.Error()
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response["data"] = list
+	response["res"] = list
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+	log.DefaultLogger.Info("get logstore success.")
 }
 
 type Data struct {

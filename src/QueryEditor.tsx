@@ -1,6 +1,6 @@
 import { defaults } from 'lodash';
 
-import React, { ChangeEvent, PureComponent } from 'react';
+import React, { ChangeEvent, PureComponent, FormEvent } from 'react';
 import {
   InlineFormLabel,
   Icon,
@@ -10,22 +10,24 @@ import {
   Button,
   ConfirmModal,
   Select,
+  RadioButtonGroup,
+  AutoSizeInput,
 } from '@grafana/ui';
-import { QueryEditorProps } from '@grafana/data';
-// import { css } from '@emotion/css';
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import { EditorField, EditorRow, QueryOptionGroup } from '@grafana/experimental';
 
 import { SLSDataSource } from './datasource';
-import { defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
-import { version, xSelectOptions } from './const';
+import { defaultEidtorQuery, defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
+import { dataSourceType, version, xSelectOptions } from './const';
 import MonacoQueryField from './SLS-monaco-editor/MonacoQueryField';
 import MonacoQueryFieldOld from 'SLS-monaco-editor/MonacoQueryFieldOld';
-import { getBackendSrv } from '@grafana/runtime';
+import { getBackendSrv, getDataSourceSrv } from '@grafana/runtime';
 import { Base64 } from 'js-base64';
 import { SelectTips } from 'SelectTips';
 
 // const { FormField } = LegacyForms;
 
-type Props = QueryEditorProps<SLSDataSource, SLSQuery, SLSDataSourceOptions>;
+type Props = QueryEditorProps<SLSDataSource, SLSQuery, SLSDataSourceOptions> & { isVariable?: boolean };
 
 const onSelectChange = (realXCol: string, onFind: () => void, onNotFind: () => void) => {
   if (xSelectOptions.find((e) => e.value === realXCol)) {
@@ -48,7 +50,13 @@ export class SLSQueryEditor extends PureComponent<Props> {
       ) !== 'custom',
     url: '',
     message: '',
+    logstoreList: [],
   };
+
+  componentDidMount() {
+    const { query } = this.props;
+    this.getList(query?.type || 'logstore');
+  }
 
   autoSelect = (realXCol: string) => {
     return onSelectChange(
@@ -94,6 +102,40 @@ export class SLSQueryEditor extends PureComponent<Props> {
   onYChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, ycol: event.target.value });
+    // executes the query
+    onRunQuery();
+  };
+
+  onDatasourceTypeChange = (v: SelectableValue) => {
+    const { onChange, query } = this.props;
+    onChange({ ...query, type: v.value, logstore: '' });
+
+    this.getList(v.value);
+  };
+
+  onLogstoreChange = (v: SelectableValue) => {
+    const { onChange, query } = this.props;
+    onChange({ ...query, logstore: v.value });
+  };
+
+  onQueryTypeChange = (v: 'range' | 'instant') => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, queryType: v });
+    // executes the query
+    onRunQuery?.();
+  };
+
+  onFormatChange = (event: FormEvent<HTMLInputElement>) => {
+    const { onChange, query, onRunQuery } = this.props;
+
+    onChange({ ...query, legendFormat: event.currentTarget.value });
+    // executes the query
+    onRunQuery();
+  };
+
+  onStepChange = (event: FormEvent<HTMLInputElement>) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, step: event.currentTarget.value });
     // executes the query
     onRunQuery();
   };
@@ -151,12 +193,86 @@ export class SLSQueryEditor extends PureComponent<Props> {
     }
   };
 
+  getList = (type: string) => {
+    const { datasource } = this.props;
+
+    const settings = getDataSourceSrv().getInstanceSettings(datasource.getRef())?.jsonData || {};
+
+    const { project } = settings as SLSDataSourceOptions;
+
+    try {
+      getBackendSrv()
+        .datasourceRequest({
+          // url: `/api/datasources/uid/${datasource.uid}/resources/api/gotoSLS`,   // only ok with 9.0.0+
+          url: `/api/datasources/${datasource.id}/resources/api/getLogstoreList`,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          data: {
+            Project: project,
+            TelemetryType: type === 'logstore' || !type ? 'None' : 'Metrics',
+          },
+        })
+        .then((response) => {
+          if (response.status === 200 && response.data?.data) {
+            this.setState({
+              logstoreList: response.data.data || [],
+            });
+          }
+        })
+        .catch((error) => {
+          console.log('error', error);
+        });
+    } catch (err) {
+      console.log('err', err);
+    }
+  };
+
+  getCollapsedInfo(query: SLSQuery): string[] {
+    const items: string[] = [];
+
+    items.push(`Legend: ${query.legendFormat || 'auto'}`);
+    items.push(`Step: ${query.step || 'auto'}`);
+    items.push(`Type: ${query.queryType || 'range'}`);
+    return items;
+  }
+
   render() {
-    const dq = defaults(this.props.query, defaultQuery);
-    const { query, xcol, ycol } = dq;
+    const { isVariable } = this.props;
+    const dq = defaults(this.props.query, isVariable ? defaultEidtorQuery : defaultQuery);
+    const { query, xcol, ycol, type, logstore, queryType, legendFormat, step } = dq;
+    const { logstoreList } = this.state;
 
     return (
       <>
+        <div className="gf-form-inline" style={{ lineHeight: '32px', verticalAlign: 'center' }}>
+          <InlineField label={'数据源类型'} labelWidth={24}>
+            <Select width={24} options={dataSourceType} onChange={this.onDatasourceTypeChange} value={type} />
+          </InlineField>
+
+          <InlineField label={'日志库列表'} labelWidth={24}>
+            <Select
+              width={24}
+              options={logstoreList.map((e) => ({ label: e, value: e }))}
+              onChange={this.onLogstoreChange}
+              value={logstore}
+            />
+          </InlineField>
+
+          {!isVariable && (
+            <Button
+              style={{ float: 'right', marginLeft: '10px' }}
+              disabled={this.state.loading}
+              fill="outline"
+              onClick={() => {
+                this.gotoSLS();
+              }}
+            >
+              <Icon name="external-link-alt" />
+              {this.state.loading ? ' loading...' : ' goto SLS'}
+            </Button>
+          )}
+        </div>
+
         <div className="gf-form gf-form--grow flex-shrink-1 min-width-15">
           <ConfirmModal
             isOpen={this.state.showAlert}
@@ -219,74 +335,104 @@ export class SLSQueryEditor extends PureComponent<Props> {
             />
           )}
         </div>
-        <div className="gf-form-inline" style={{ lineHeight: '32px', verticalAlign: 'center' }}>
-          <InlineField label={'ycol'} labelWidth={12}>
-            <Input
-              width={60}
-              prefix={<Icon name="text-fields" />}
-              value={ycol}
-              onChange={this.onYChange}
-              label="ycol"
-              suffix={
-                <Tooltip content={<SelectTips type="ycol" />} interactive theme="info-alt">
-                  <Icon name="question-circle" />
-                </Tooltip>
-              }
-            />
-          </InlineField>
 
-          <InlineField label={'xcol'} labelWidth={12}>
-            <div style={{ display: 'flex' }}>
-              <Select
-                width={this.state.xColDisabled ? 40 : 20}
-                menuShouldPortal
-                options={xSelectOptions}
-                value={this.autoSelect(xcol ?? 'time')}
-                onChange={(v) => {
-                  const { onChange, query, onRunQuery } = this.props;
-                  if (v.value !== 'custom') {
-                    this.setState({
-                      xColDisabled: true,
-                    });
-                    onChange({ ...query, xcol: v.value });
-                    onRunQuery();
-                  } else {
-                    this.setState({
-                      xColDisabled: false,
-                    });
-                    onChange({ ...query, xcol: 'time' });
-                  }
-                }}
-                prefix={<Icon name="palette" />}
-              />
+        {type !== 'metricstore' && !isVariable && (
+          <div className="gf-form-inline" style={{ lineHeight: '32px', verticalAlign: 'center' }}>
+            <InlineField label={'ycol'} labelWidth={12}>
               <Input
-                width={this.state.xColDisabled ? 20 : 40}
-                disabled={this.state.xColDisabled}
-                prefix={<Icon name="x" />}
-                value={xcol}
-                onChange={this.onXChange}
-                label="xcol"
+                width={60}
+                prefix={<Icon name="text-fields" />}
+                value={ycol}
+                onChange={this.onYChange}
+                label="ycol"
                 suffix={
-                  <Tooltip content={<SelectTips type="xcol" />} interactive theme="info-alt">
+                  <Tooltip content={<SelectTips type="ycol" />} interactive theme="info-alt">
                     <Icon name="question-circle" />
                   </Tooltip>
                 }
               />
-            </div>
-          </InlineField>
+            </InlineField>
 
-          <Button
-            style={{ float: 'right', marginLeft: '10px' }}
-            disabled={this.state.loading}
-            fill="outline"
-            onClick={() => {
-              this.gotoSLS();
-            }}
-          >
-            <Icon name="external-link-alt" />
-            {this.state.loading ? ' loading...' : ' goto SLS'}
-          </Button>
-        </div>
+            <InlineField label={'xcol'} labelWidth={12}>
+              <div style={{ display: 'flex' }}>
+                <Select
+                  width={this.state.xColDisabled ? 40 : 20}
+                  menuShouldPortal
+                  options={xSelectOptions}
+                  value={this.autoSelect(xcol ?? 'time')}
+                  onChange={(v) => {
+                    const { onChange, query, onRunQuery } = this.props;
+                    if (v.value !== 'custom') {
+                      this.setState({
+                        xColDisabled: true,
+                      });
+                      onChange({ ...query, xcol: v.value });
+                      onRunQuery();
+                    } else {
+                      this.setState({
+                        xColDisabled: false,
+                      });
+                      onChange({ ...query, xcol: 'time' });
+                    }
+                  }}
+                  prefix={<Icon name="palette" />}
+                />
+                <Input
+                  width={this.state.xColDisabled ? 20 : 40}
+                  disabled={this.state.xColDisabled}
+                  prefix={<Icon name="x" />}
+                  value={xcol}
+                  onChange={this.onXChange}
+                  label="xcol"
+                  suffix={
+                    <Tooltip content={<SelectTips type="xcol" />} interactive theme="info-alt">
+                      <Icon name="question-circle" />
+                    </Tooltip>
+                  }
+                />
+              </div>
+            </InlineField>
+          </div>
+        )}
+
+        {type === 'metricstore' && (
+          <EditorRow>
+            <div>
+              <QueryOptionGroup title="Options" collapsedInfo={this.getCollapsedInfo(dq)}>
+                {!isVariable && (
+                  <EditorField label="Format" style={{ margin: '0 0 4px 4px' }}>
+                    <AutoSizeInput
+                      type="text"
+                      placeholder={'auto'}
+                      minWidth={10}
+                      onCommitChange={this.onFormatChange}
+                      defaultValue={legendFormat}
+                    />
+                  </EditorField>
+                )}
+                <EditorField label="Step" style={{ margin: '0 0 4px 4px' }}>
+                  <AutoSizeInput
+                    type="text"
+                    placeholder={'auto'}
+                    minWidth={10}
+                    onCommitChange={this.onStepChange}
+                    defaultValue={step}
+                  />
+                </EditorField>
+                <EditorField label="Type">
+                  <RadioButtonGroup
+                    options={[
+                      { label: 'Range', value: 'range' as any },
+                      { label: 'Instant', value: 'instant' },
+                    ]}
+                    value={(queryType || 'range') as any}
+                    onChange={this.onQueryTypeChange}
+                  />
+                </EditorField>
+              </QueryOptionGroup>
+            </div>
+          </EditorRow>
+        )}
       </>
     );
   }

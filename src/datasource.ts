@@ -9,8 +9,9 @@ import {
   FieldType,
   MutableDataFrame,
   Vector,
+  MetricFindValue,
 } from '@grafana/data';
-import { SLSDataSourceOptions, SLSQuery } from './types';
+import { defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
 import { DataSourceWithBackend, getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 import _ from 'lodash';
 import { map } from 'rxjs/operators';
@@ -31,27 +32,42 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
     return super.query(options);
   }
 
-  metricFindQuery(query: SLSQuery|string, options?: any) {
-    // console.log("into metricFindQuery")
+  metricFindQuery(query: SLSQuery | string, options?: any): Promise<MetricFindValue[]> {
+    const _defaultQuery = { ...defaultQuery, ...(typeof query === 'string' ? { query } : query)}
+    const { type, logstore, queryType, legendFormat, step } = _defaultQuery;
+    console.log('metricFindQuery-dq', query, _defaultQuery, defaultQuery);
     const data = {
       from: options.range.from.valueOf().toString(),
       to: options.range.to.valueOf().toString(),
       queries: [
         {
           // datasource: this.name,
-          datasource: {type: this.type, uid: this.uid},
+          datasource: { type: this.type, uid: this.uid },
           datasourceId: this.id,
-          query: replaceQueryParameters(query, options),
+          query: replaceQueryParameters(_defaultQuery.query || '', options),
+          type,
+          logstore,
+          queryType,
+          legendFormat,
+          step,
         },
       ],
     };
-    return getBackendSrv()
-      .post('/api/ds/query', data)
-      .then((response) => {
-        // console.log("metricFindQuery /api/ds/query response", response)
-        return response.results.A.frames[0].data.values;
-      })
-      .then(mapToTextValue);
+
+    return new Promise(async (resolve) => {
+      let values: any[] = [];
+
+      try {
+        const response = await getBackendSrv().post('/api/ds/query', data);
+        values = response.results.A.frames ?? []
+      } catch (error) {
+        console.log('error', error)
+      }
+      const res = mapToTextValueNew(values);
+
+      console.log('res', res)
+      resolve(res);
+    });
   }
 }
 
@@ -168,18 +184,64 @@ export function mapToTextValue(result: any) {
   });
 }
 
-export function replaceQueryParameters(q: SLSQuery|string, options: DataQueryRequest<SLSQuery>) {
-  if (typeof q !== "string" && q.hide) {
+export function mapToTextValueNew(frames: any): MetricFindValue[] {
+
+  if(!frames || !Array.isArray(frames) || frames?.length === 0 ) {
+    return []
+  }
+
+  const TextValues: MetricFindValue[] = [];
+  for(const frame of frames) {
+    if(frame.data?.values?.length > 0) {
+      const fieldsValues = frame.data.values
+      // 如果只有两列 默认第一列为text
+      if(fieldsValues.length === 2) {
+        for(let i = 0; i < fieldsValues[0].length; i++) {
+          TextValues.push({ text: fieldsValues[0][i], value: fieldsValues[1][i] });
+        }
+      } else {
+        for(let rowIndx = 0; rowIndx < fieldsValues[0].length; rowIndx++) {
+
+          // 保存之前的逻辑
+          const columnBaseItem = fieldsValues[0][rowIndx] // 默认都是用第一项来处理
+          if(columnBaseItem && columnBaseItem.text && columnBaseItem.value) {
+            TextValues.push({ text: columnBaseItem.text, value: columnBaseItem.value });
+          } else if (_.isObject(columnBaseItem)){
+            TextValues.push({ text: safeJsonStringify(columnBaseItem), value: rowIndx });
+          } else {
+            // 把每一项的值拼接起来
+            const resValue = fieldsValues.reduce((str: string, field: any[]) => str += field[rowIndx] + " " , '')
+            TextValues.push({ text: resValue, value: resValue });
+          }
+
+        }
+      }
+    }
+  }
+
+  return TextValues
+}
+
+function safeJsonStringify(obj: any) {
+  try {
+    return JSON.stringify(obj);
+  } catch (error) {
+    return obj;
+  }
+}
+
+export function replaceQueryParameters(q: SLSQuery | string, options: DataQueryRequest<SLSQuery>) {
+  if (typeof q !== 'string' && q.hide) {
     return;
   }
   let varQuery;
-  if (typeof q === "string") {
-    varQuery = q
-  }else {
-    varQuery = q.query
+  if (typeof q === 'string') {
+    varQuery = q;
+  } else {
+    varQuery = q.query;
   }
   let query = getTemplateSrv().replace(
-      varQuery,
+    varQuery,
     options.scopedVars,
     function (
       value: { forEach: (arg0: (v: string) => void) => void; join: (arg0: string) => void },
@@ -188,7 +250,10 @@ export function replaceQueryParameters(q: SLSQuery|string, options: DataQueryReq
       if (typeof value === 'object' && (variable.multi || variable.includeAll)) {
         const a: string[] = [];
         value.forEach(function (v: string) {
-          if (variable.name === variable.label || (variable.description && variable.description.indexOf('field_search') >= 0)) {
+          if (
+            variable.name === variable.label ||
+            (variable.description && variable.description.indexOf('field_search') >= 0)
+          ) {
             a.push('"' + variable.name + '":"' + v + '"');
           } else {
             a.push(v);

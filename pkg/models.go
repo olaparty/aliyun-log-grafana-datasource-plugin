@@ -7,6 +7,11 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
+type Header struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type LogSource struct {
 	Endpoint        string
 	Project         string `json:"project"`
@@ -14,16 +19,22 @@ type LogSource struct {
 	RoleArn         string `json:"roleArn"`
 	AccessKeyId     string
 	AccessKeySecret string
+	Headers         []Header `json:"headers"`
 }
 
 type QueryInfo struct {
-	QueryType   string `json:"type"`
-	QueryMode   string `json:"mode"`
-	Query       string `json:"query"`
-	Xcol        string `json:"xcol"`
-	Ycol        string `json:"ycol"`
-	LogsPerPage int64  `json:"logsPerPage"`
-	CurrentPage int64  `json:"currentPage"`
+	Type         string `json:"type"`
+	QueryMode    string `json:"mode"`
+	Query        string `json:"query"`
+	Xcol         string `json:"xcol"`
+	Ycol         string `json:"ycol"`
+	LogsPerPage  int64  `json:"logsPerPage"`
+	CurrentPage  int64  `json:"currentPage"`
+	LogStore     string `json:"logStore"`
+	LegendFormat string `json:"legendFormat"`
+	QueryType    string `json:"queryType"`
+	Step         string `json:"step"`
+	IntervalMs   int64  `json:"intervalMs"`
 }
 
 type Result struct {
@@ -36,6 +47,20 @@ type Contents struct {
 	Keys    []string   `json:"keys"`
 	Terms   [][]string `json:"terms"`
 	Limited string     `json:"limited"`
+}
+
+type ResultItem struct {
+	Metric map[string]string `json:"metric"`
+	Values [][]interface{}   `json:"values"`
+	Value  []interface{}     `json:"value"`
+}
+type MetricData struct {
+	ResultType string       `json:"resultType"`
+	Result     []ResultItem `json:"result"`
+}
+type MetricLogs struct {
+	Status string     `json:"status"`
+	Data   MetricData `json:"data"`
 }
 
 func LoadSettings(ctx backend.PluginContext) (*LogSource, error) {
