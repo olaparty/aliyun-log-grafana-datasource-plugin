@@ -75,12 +75,13 @@ export const xSelectOptions = [
 ];
 
 export const dataSourceType = [
+  { label: 'ALL(SQL)', value: 'all' },
   {
     label: 'Logstore(SQL)',
     value: 'logstore',
   },
-  { label: 'Metricstore(PromQL)', value: 'metricstore' },
   { label: 'Metricstore(SQL)', value: 'metricsql' },
+  { label: 'Metricstore(PromQL)', value: 'metricstore' },
 ];
 
 export const version = (window as any)?.grafanaBootData?.settings?.buildInfo?.version ?? '';

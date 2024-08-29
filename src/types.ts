@@ -14,7 +14,7 @@ export interface SLSQuery extends DataQuery {
 }
 
 export const defaultQuery: Partial<SLSQuery> = {
-  type: 'logstore',
+  type: 'all',
   query: '* | select count(*) as c, __time__-__time__%60 as t group by t',
   xcol: 't',
   ycol: '',
@@ -22,7 +22,7 @@ export const defaultQuery: Partial<SLSQuery> = {
   currentPage: 1,
 };
 export const defaultEidtorQuery: Partial<SLSQuery> = {
-  type: 'logstore',
+  type: 'all',
   query: '',
   xcol: '',
   ycol: '',

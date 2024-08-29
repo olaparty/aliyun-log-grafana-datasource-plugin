@@ -35,7 +35,6 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
   metricFindQuery(query: SLSQuery | string, options?: any): Promise<MetricFindValue[]> {
     const _defaultQuery = { ...defaultQuery, ...(typeof query === 'string' ? { query } : query)}
     const { type, logstore, queryType, legendFormat, step } = _defaultQuery;
-    console.log('metricFindQuery-dq', query, _defaultQuery, defaultQuery);
     const data = {
       from: options.range.from.valueOf().toString(),
       to: options.range.to.valueOf().toString(),
@@ -64,8 +63,6 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
         console.log('error', error)
       }
       const res = mapToTextValueNew(values);
-
-      console.log('res', res)
       resolve(res);
     });
   }
@@ -162,7 +159,6 @@ export function transformResponse(df: DataFrame): DataFrame {
 }
 
 function responseToDataQueryResponse(response: DataQueryResponse): DataQueryResponse {
-  console.log(response);
   return {
     data: [transformResponse(response.data[0])],
   };
@@ -211,7 +207,7 @@ export function mapToTextValueNew(frames: any): MetricFindValue[] {
           } else {
             // 把每一项的值拼接起来
             const resValue = fieldsValues.reduce((str: string, field: any[]) => str += field[rowIndx] + " " , '')
-            TextValues.push({ text: resValue, value: resValue });
+            TextValues.push({ text: resValue?.trim?.(), value: resValue?.trim?.() });
           }
 
         }

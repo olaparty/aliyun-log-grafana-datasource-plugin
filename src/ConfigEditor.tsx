@@ -130,7 +130,7 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
           dataSourceName="SLS数据源"
         />
         <hr style={{ margin: '20px 0' }} />
-        <ConfigSection title="Connection" description="连接设置">
+        <ConfigSection title="Connection">
           {/* EndPonit */}
           <InlineField
             htmlFor="connection-url"
@@ -219,11 +219,28 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
         {/* Other  */}
         <hr style={{ margin: '20px 0' }} />
         <ConfigSection title="Other">
+
+        <InlineField
+            style={{ marginTop: '8px' }}
+            htmlFor="connection-logstore"
+            label={'Default Logstore'}
+            labelWidth={24}
+            grow
+            interactive
+          >
+            <Input
+              id="other-logstore-url"
+              aria-label="logstore"
+              onChange={this.onLogStoreChange}
+              value={jsonData.logstore || ''}
+            />
+          </InlineField>
+
           {/* roleArn */}
           <InlineField
             style={{ marginTop: '8px' }}
             htmlFor="connection-roleArn"
-            label={'roleArn'}
+            label={'RoleArn'}
             labelWidth={24}
             grow
             interactive

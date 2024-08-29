@@ -209,7 +209,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
           headers: { 'Content-Type': 'application/json' },
           data: {
             Project: project,
-            TelemetryType: type === 'logstore' || !type ? 'None' : 'Metrics',
+            TelemetryType: type === 'all' || !type ? '' : type === 'logstore' ? 'None' : 'Metrics',
           },
         })
         .then((response) => {
@@ -237,10 +237,15 @@ export class SLSQueryEditor extends PureComponent<Props> {
   }
 
   render() {
-    const { isVariable } = this.props;
+    const { isVariable, datasource } = this.props;
+    const settings = getDataSourceSrv().getInstanceSettings(datasource.getRef())?.jsonData || {};
     const dq = defaults(this.props.query, isVariable ? defaultEidtorQuery : defaultQuery);
     const { query, xcol, ycol, type, logstore, queryType, legendFormat, step } = dq;
+    const { logstore: defaultLogstore } = settings as SLSDataSourceOptions;
     const { logstoreList } = this.state;
+    const uniqLogstoreList = [...new Set([defaultLogstore, ...logstoreList])].map((i) =>
+      i === defaultLogstore ? { label: i, value: i, description: "Defalut Logstore" } : { label: i, value: i }
+    );
 
     return (
       <>
@@ -252,9 +257,9 @@ export class SLSQueryEditor extends PureComponent<Props> {
           <InlineField label={'日志库列表'} labelWidth={24}>
             <Select
               width={24}
-              options={logstoreList.map((e) => ({ label: e, value: e }))}
+              options={uniqLogstoreList}
               onChange={this.onLogstoreChange}
-              value={logstore}
+              value={logstore || defaultLogstore}
             />
           </InlineField>
 

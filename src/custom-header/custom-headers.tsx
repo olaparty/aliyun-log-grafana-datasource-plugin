@@ -89,7 +89,7 @@ export const CustomHeaders: React.FC<Props> = ({ headers: headersFromProps, onCh
     <div className={styles.container}>
       <ConfigSubSection
         title="HTTP headers"
-        description="Pass along additional context and metadata about the request/response for MetricsStore"
+        description="Pass along additional context and metadata about the request/response for Metricstore(PromQL)"
         isCollapsible
         isInitiallyOpen
       >
