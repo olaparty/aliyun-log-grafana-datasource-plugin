@@ -14,7 +14,7 @@ import {
   AutoSizeInput,
 } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
-import { EditorField, EditorRow, QueryOptionGroup } from '@grafana/experimental';
+// import { EditorField, EditorRow, QueryOptionGroup } from '@grafana/experimental';
 
 import { SLSDataSource } from './datasource';
 import { defaultEidtorQuery, defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
@@ -24,6 +24,9 @@ import MonacoQueryFieldOld from 'SLS-monaco-editor/MonacoQueryFieldOld';
 import { getBackendSrv, getDataSourceSrv } from '@grafana/runtime';
 import { Base64 } from 'js-base64';
 import { SelectTips } from 'SelectTips';
+import  {EditorRow } from './components/QueryEditor/EditorRow';
+import QueryOptionGroup from './components/QueryEditor/QueryOptionGroup';
+import EditorField  from './components/QueryEditor/EditorField';
 
 // const { FormField } = LegacyForms;
 
@@ -238,7 +241,8 @@ export class SLSQueryEditor extends PureComponent<Props> {
 
   render() {
     const { isVariable, datasource } = this.props;
-    const settings = getDataSourceSrv().getInstanceSettings(datasource.getRef())?.jsonData || {};
+
+    const settings = getDataSourceSrv().getInstanceSettings(datasource.uid)?.jsonData || {};
     const dq = defaults(this.props.query, isVariable ? defaultEidtorQuery : defaultQuery);
     const { query, xcol, ycol, type, logstore, queryType, legendFormat, step } = dq;
     const { logstore: defaultLogstore } = settings as SLSDataSourceOptions;

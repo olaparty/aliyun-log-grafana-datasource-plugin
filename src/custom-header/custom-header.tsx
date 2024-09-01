@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { css, cx } from '@emotion/css';
-import { InlineFieldRow, InlineField, Input, IconButton, useTheme2 } from '@grafana/ui';
+import { InlineFieldRow, InlineField, Input, IconButton, withTheme2 } from '@grafana/ui';
 import type { LocalHeader } from '../types';
-
 
 export type Props = {
   header: LocalHeader;
@@ -10,9 +9,10 @@ export type Props = {
   onBlur: () => void;
   onDelete: () => void;
   readOnly: boolean;
+  theme: any;  // Add theme to props for withTheme2 HOC
 };
 
-const useCommonStyles = () => {
+const getCommonStyles = () => {
   return {
     inlineFieldNoMarginRight: css({
       marginRight: 0,
@@ -26,31 +26,44 @@ const useCommonStyles = () => {
   };
 };
 
-export const CustomHeader: React.FC<Props> = ({ header, onChange, onBlur, onDelete, readOnly }) => {
-  const { spacing } = useTheme2();
-  const commonStyles = useCommonStyles();
-  const styles = {
-    container: css({
-      alignItems: 'center',
-    }),
-    input: css({
-      minWidth: '100%',
-    }),
-    headerNameField: css({
-      width: '40%',
-      marginRight: 0,
-      paddingRight: spacing(1),
-    }),
-    headerValueField: css({
-      width: '45%',
-      marginRight: 0,
-    }),
-    removeHeaderBtn: css({
-      margin: `0 0 3px 10px`,
-    }),
+class CustomHeader extends Component<Props> {
+  handleInputChange = (field: 'name' | 'value') => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { header, onChange } = this.props;
+    onChange({ ...header, [field]: event.currentTarget.value });
   };
-  return (
-    <>
+
+  handleReset = () => {
+    const { header, onChange } = this.props;
+    onChange({ ...header, configured: false, value: '' });
+  };
+
+  render() {
+    const { header, onBlur, onDelete, readOnly, theme } = this.props;
+    const { spacing } = theme;
+    const commonStyles = getCommonStyles();
+
+    const styles = {
+      container: css({
+        alignItems: 'center',
+      }),
+      input: css({
+        minWidth: '100%',
+      }),
+      headerNameField: css({
+        width: '40%',
+        marginRight: 0,
+        paddingRight: spacing(1),
+      }),
+      headerValueField: css({
+        width: '45%',
+        marginRight: 0,
+      }),
+      removeHeaderBtn: css({
+        margin: `0 0 3px 10px`,
+      }),
+    };
+
+    return (
       <InlineFieldRow className={styles.container}>
         <InlineField
           label="Header"
@@ -65,7 +78,7 @@ export const CustomHeader: React.FC<Props> = ({ header, onChange, onBlur, onDele
             placeholder="X-Custom-Header"
             value={header.name}
             width={12}
-            onChange={(e) => onChange({ ...header, name: e.currentTarget.value })}
+            onChange={this.handleInputChange('name')}
             onBlur={onBlur}
             className={styles.input}
           />
@@ -83,8 +96,8 @@ export const CustomHeader: React.FC<Props> = ({ header, onChange, onBlur, onDele
             placeholder="Header value"
             value={header.value}
             width={12}
-            onChange={(e) => onChange({ ...header, value: e.currentTarget.value })}
-            onReset={readOnly ? () => {} : () => onChange({ ...header, configured: false, value: '' })}
+            onChange={this.handleInputChange('value')}
+            onReset={readOnly ? () => {} : this.handleReset}
             onBlur={onBlur}
             className={styles.input}
           />
@@ -99,6 +112,8 @@ export const CustomHeader: React.FC<Props> = ({ header, onChange, onBlur, onDele
           disabled={readOnly}
         />
       </InlineFieldRow>
-    </>
-  );
-};
+    );
+  }
+}
+
+export default withTheme2(CustomHeader);

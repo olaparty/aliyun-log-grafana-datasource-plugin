@@ -2,8 +2,9 @@ import React, { ChangeEvent, PureComponent } from 'react';
 import { InlineField, Input, SecretInput } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { HeaderWithValue, SLSDataSourceOptions, SLSSecureJsonData } from './types';
-import { ConfigSection, DataSourceDescription } from '@grafana/experimental';
-import { CustomHeaders } from './custom-header/custom-headers';
+import CustomHeaders from './custom-header/custom-headers';
+import { ConfigSection } from './components/configSection';
+import { DataSourceDescription } from './components/description';
 
 interface Props extends DataSourcePluginOptionsEditorProps<SLSDataSourceOptions> {}
 
@@ -219,9 +220,9 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
         {/* Other  */}
         <hr style={{ margin: '20px 0' }} />
         <ConfigSection title="Other">
-
-        <InlineField
+          <InlineField
             style={{ marginTop: '8px' }}
+            tooltip={'请输入默认的Logstore,如果不填写,请确保您的 ak 账号具备该 project 的ListLogStore读权限'}
             htmlFor="connection-logstore"
             label={'Default Logstore'}
             labelWidth={24}
