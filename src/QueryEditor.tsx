@@ -10,7 +10,6 @@ import {
   Button,
   ConfirmModal,
   Select,
-  RadioButtonGroup,
   AutoSizeInput,
 } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
@@ -24,9 +23,10 @@ import MonacoQueryFieldOld from 'SLS-monaco-editor/MonacoQueryFieldOld';
 import { getBackendSrv, getDataSourceSrv } from '@grafana/runtime';
 import { Base64 } from 'js-base64';
 import { SelectTips } from 'SelectTips';
-import  {EditorRow } from './components/QueryEditor/EditorRow';
+import EditorRow from './components/QueryEditor/EditorRow';
 import QueryOptionGroup from './components/QueryEditor/QueryOptionGroup';
-import EditorField  from './components/QueryEditor/EditorField';
+import EditorField from './components/QueryEditor/EditorField';
+import RadioButtonGroup from './components/RadioButtonGroup/RadioButtonGroup'
 
 // const { FormField } = LegacyForms;
 
@@ -121,7 +121,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
     onChange({ ...query, logstore: v.value });
   };
 
-  onQueryTypeChange = (v: 'range' | 'instant') => {
+  onQueryTypeChange = (v: any) => {
     const { onChange, query, onRunQuery } = this.props;
     onChange({ ...query, queryType: v });
     // executes the query
@@ -248,7 +248,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
     const { logstore: defaultLogstore } = settings as SLSDataSourceOptions;
     const { logstoreList } = this.state;
     const uniqLogstoreList = [...new Set([defaultLogstore, ...logstoreList])].map((i) =>
-      i === defaultLogstore ? { label: i, value: i, description: "Defalut Logstore" } : { label: i, value: i }
+      i === defaultLogstore ? { label: i, value: i, description: 'Defalut Logstore' } : { label: i, value: i }
     );
 
     return (

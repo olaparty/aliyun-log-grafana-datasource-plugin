@@ -116,7 +116,7 @@ class CustomHeaders extends Component<Props, State> {
         <ConfigSection
           title="HTTP headers"
           description="Pass along additional context and metadata about the request/response for Metricstore(PromQL)"
-          isCollapsible
+          isCollapsible={false}
           isInitiallyOpen
           kind="sub-section"
         >
