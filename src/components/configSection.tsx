@@ -1,5 +1,6 @@
 import React, { ReactNode, PureComponent } from 'react';
-import { IconButton, IconName } from '@grafana/ui';
+import { IconName } from '@grafana/ui';
+import { IconButton } from './IconButton';
 
 export type Props = {
   title: string;

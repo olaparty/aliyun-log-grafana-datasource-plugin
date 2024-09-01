@@ -129,14 +129,14 @@ export const  RadioButton = withTheme2(RadioButton_);
 
 // Utility functions
 
-function getMouseFocusStyles(theme: GrafanaTheme2): CSSObject {
+export function getMouseFocusStyles(theme: GrafanaTheme2): CSSObject {
   return {
     outline: 'none',
     boxShadow: `none`,
   };
 }
 
-function getFocusStyles(theme: GrafanaTheme2): CSSObject {
+export function getFocusStyles(theme: GrafanaTheme2): CSSObject {
   return {
     outline: '2px dotted transparent',
     outlineOffset: '2px',
