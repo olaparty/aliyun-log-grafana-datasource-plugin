@@ -199,7 +199,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
   getList = (type: string) => {
     const { datasource } = this.props;
 
-    const settings = getDataSourceSrv().getInstanceSettings(datasource.getRef())?.jsonData || {};
+    const settings = getDataSourceSrv().getInstanceSettings(datasource.uid)?.jsonData || {};
 
     const { project } = settings as SLSDataSourceOptions;
 
