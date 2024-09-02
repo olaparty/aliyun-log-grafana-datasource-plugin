@@ -46,9 +46,6 @@ class CustomHeader extends Component<Props> {
       container: css({
         alignItems: 'center',
       }),
-      input: css({
-        minWidth: '100%',
-      }),
       headerNameField: css({
         width: '40%',
         marginRight: 0,
@@ -77,10 +74,8 @@ class CustomHeader extends Component<Props> {
             id={`custom-header-${header.id}-name-input`}
             placeholder="X-Custom-Header"
             value={header.name}
-            width={12}
             onChange={this.handleInputChange('name')}
             onBlur={onBlur}
-            className={styles.input}
           />
         </InlineField>
         <InlineField
@@ -95,11 +90,9 @@ class CustomHeader extends Component<Props> {
             id={`custom-header-${header.id}-value-input`}
             placeholder="Header value"
             value={header.value}
-            width={12}
             onChange={this.handleInputChange('value')}
             onReset={readOnly ? () => {} : this.handleReset}
             onBlur={onBlur}
-            className={styles.input}
           />
         </InlineField>
         <IconButton

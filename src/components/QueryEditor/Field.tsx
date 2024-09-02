@@ -101,7 +101,7 @@ class Field extends Component<FieldProps> {
     } = this.props;
 
     const styles = this.getStyles();
-    const inputId = htmlFor ?? ReactUtils.getChildId(children);
+    const inputId = htmlFor ?? ReactUtils?.getChildId?.(children);
 
     const labelElement =
       typeof label === 'string' ? (

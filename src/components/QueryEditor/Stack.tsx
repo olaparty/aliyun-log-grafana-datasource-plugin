@@ -32,6 +32,7 @@ class Stack extends Component<React.PropsWithChildren<StackProps>> {
         alignItems: alignItems,
         gap: theme.spacing(gap),
         flexGrow: flexGrow,
+        width: '100%'
       }),
     };
   };

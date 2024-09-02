@@ -1,17 +1,7 @@
 import { defaults } from 'lodash';
 
 import React, { ChangeEvent, PureComponent, FormEvent } from 'react';
-import {
-  InlineFormLabel,
-  Icon,
-  Input,
-  Tooltip,
-  InlineField,
-  Button,
-  ConfirmModal,
-  Select,
-  AutoSizeInput,
-} from '@grafana/ui';
+import { InlineFormLabel, Icon, Input, Tooltip, InlineField, Button, ConfirmModal, Select } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 // import { EditorField, EditorRow, QueryOptionGroup } from '@grafana/experimental';
 
@@ -26,7 +16,7 @@ import { SelectTips } from 'SelectTips';
 import EditorRow from './components/QueryEditor/EditorRow';
 import QueryOptionGroup from './components/QueryEditor/QueryOptionGroup';
 import EditorField from './components/QueryEditor/EditorField';
-import RadioButtonGroup from './components/RadioButtonGroup/RadioButtonGroup'
+import RadioButtonGroup from './components/RadioButtonGroup/RadioButtonGroup';
 
 // const { FormField } = LegacyForms;
 
@@ -410,23 +400,16 @@ export class SLSQueryEditor extends PureComponent<Props> {
               <QueryOptionGroup title="Options" collapsedInfo={this.getCollapsedInfo(dq)}>
                 {!isVariable && (
                   <EditorField label="Format" style={{ margin: '0 0 4px 4px' }}>
-                    <AutoSizeInput
+                    <Input
                       type="text"
                       placeholder={'auto'}
-                      minWidth={10}
-                      onCommitChange={this.onFormatChange}
+                      onChange={this.onFormatChange}
                       defaultValue={legendFormat}
                     />
                   </EditorField>
                 )}
                 <EditorField label="Step" style={{ margin: '0 0 4px 4px' }}>
-                  <AutoSizeInput
-                    type="text"
-                    placeholder={'auto'}
-                    minWidth={10}
-                    onCommitChange={this.onStepChange}
-                    defaultValue={step}
-                  />
+                  <Input type="text" placeholder={'auto'} onChange={this.onStepChange} defaultValue={step} />
                 </EditorField>
                 <EditorField label="Type">
                   <RadioButtonGroup

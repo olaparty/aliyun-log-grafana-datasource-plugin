@@ -49,7 +49,7 @@ class EditorField extends Component<EditorFieldProps> {
     const styles = this.getStyles();
 
     // Null check for backward compatibility
-    const childInputId = fieldProps?.htmlFor || ReactUtils?.getChildId(children);
+    const childInputId = fieldProps?.htmlFor || ReactUtils?.getChildId?.(children);
 
     const labelEl = (
       <>

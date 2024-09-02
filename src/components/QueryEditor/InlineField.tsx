@@ -101,7 +101,7 @@ class InlineField extends Component<Props> {
     } = this.props;
 
     const styles = this.getStyles();
-    const inputId = htmlFor ?? ReactUtils.getChildId(children);
+    const inputId = htmlFor ?? ReactUtils?.getChildId?.(children);
 
     const labelElement =
       typeof label === 'string' ? (
