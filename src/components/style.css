@@ -9,7 +9,8 @@
   }
 
   .description-text {
-    font-weight: 400
+    font-weight: 400;
+    font-family: Inter, Helvetica, Arial, sans-serif;
   }
 
   a {

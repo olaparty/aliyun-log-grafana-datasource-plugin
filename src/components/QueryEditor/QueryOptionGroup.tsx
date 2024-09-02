@@ -2,22 +2,23 @@ import { css } from '@emotion/css';
 import React, { Component } from 'react';
 import { getValueFormat, GrafanaTheme2 } from '@grafana/data';
 import { config } from '@grafana/runtime';
-import { Collapse, Icon, Tooltip, withTheme2 } from '@grafana/ui';
+import { Icon, Tooltip, withTheme2 } from '@grafana/ui';
+import { Collapse } from '../Collapse';
 
-import  Stack  from './Stack';
+import Stack from './Stack';
 
 export type QueryStats = {
   bytes: number;
   // The error message displayed in the UI when we cant estimate the size of the query.
   message?: string;
-}
+};
 
 interface Props {
   title: string;
   collapsedInfo: string[];
   queryStats?: QueryStats | null;
   children: React.ReactNode;
-  theme: GrafanaTheme2;  // Add theme to props for withTheme2 HOC
+  theme: GrafanaTheme2; // Add theme to props for withTheme2 HOC
 }
 
 interface State {
@@ -38,7 +39,6 @@ class QueryOptionGroup extends Component<Props, State> {
 
   getStyles = () => {
     const { theme } = this.props;
-    console.log('theme', theme)
     return {
       collapse: css({
         backgroundColor: 'unset',

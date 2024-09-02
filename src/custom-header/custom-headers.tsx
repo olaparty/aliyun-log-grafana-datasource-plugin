@@ -49,7 +49,8 @@ class CustomHeaders extends Component<Props, State> {
     }
   }
 
-  onHeaderAdd = () => {
+  onHeaderAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
     this.setState(
       (prevState) => ({
         headers: [...prevState.headers, { id: uniqueId(), name: '', value: '', configured: false }],

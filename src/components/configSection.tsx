@@ -1,6 +1,7 @@
 import React, { ReactNode, PureComponent } from 'react';
 import { IconName } from '@grafana/ui';
 import { IconButton } from './IconButton';
+import './style.css';
 
 export type Props = {
   title: string;
@@ -17,13 +18,7 @@ export class ConfigSection extends PureComponent<Props> {
     isOpen: true,
   };
   render() {
-    const {
-      children,
-      title,
-      description,
-      isCollapsible = false,
-      kind = 'section',
-    } = this.props;
+    const { children, title, description, isCollapsible = false, kind = 'section' } = this.props;
     const { isOpen } = this.state;
     const iconName: IconName = isOpen ? 'angle-up' : 'angle-down';
     const isSubSection = kind === 'sub-section';
@@ -44,7 +39,14 @@ export class ConfigSection extends PureComponent<Props> {
           )}
         </div>
         {description && (
-          <p className={'description-ext'} style={{ marginTop: isSubSection ? '2px' : '4px' }}>
+          <p
+            className={'description-text'}
+            style={{
+              marginTop: isSubSection ? '2px' : '4px',
+              fontFamily: 'Inter, Helvetica, Arial, sans-serif',
+              fontSize: '0.8rem',
+            }}
+          >
             {description}
           </p>
         )}

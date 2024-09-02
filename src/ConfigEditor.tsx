@@ -1,11 +1,11 @@
 import React, { ChangeEvent, PureComponent } from 'react';
-import { Input, SecretInput } from '@grafana/ui';
+import { Input, InlineField } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { HeaderWithValue, SLSDataSourceOptions, SLSSecureJsonData } from './types';
 import CustomHeaders from './custom-header/custom-headers';
 import { ConfigSection } from './components/configSection';
 import { DataSourceDescription } from './components/description';
-import InlineField from './components/QueryEditor/InlineField';
+import { SecretInput } from './components/QueryEditor/SecretInput';
 
 interface Props extends DataSourcePluginOptionsEditorProps<SLSDataSourceOptions> {}
 

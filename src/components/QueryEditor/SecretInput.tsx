@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { HorizontalGroup, Button, Input } from '@grafana/ui';
+import { Button, Input } from '@grafana/ui';
+import Stack from './Stack';
 
 export type Props = React.ComponentProps<typeof Input> & {
   /** TRUE if the secret was already configured. (It is needed as often the backend doesn't send back the actual secret, only the information that it was configured) */
@@ -12,7 +13,7 @@ export const CONFIGURED_TEXT = 'configured';
 export const RESET_BUTTON_TEXT = 'Reset';
 
 export const SecretInput = ({ isConfigured, onReset, ...props }: Props) => (
-  <HorizontalGroup>
+  <Stack gap={2} wrap={false}>
     {!isConfigured && <Input {...props} type="password" />}
     {isConfigured && <Input {...props} type="text" disabled={true} value={CONFIGURED_TEXT} />}
     {isConfigured && (
@@ -20,5 +21,5 @@ export const SecretInput = ({ isConfigured, onReset, ...props }: Props) => (
         {RESET_BUTTON_TEXT}
       </Button>
     )}
-  </HorizontalGroup>
+  </Stack>
 );

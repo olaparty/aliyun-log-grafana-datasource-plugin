@@ -17,7 +17,6 @@ class EditorRow extends Component<React.PropsWithChildren<EditorRowProps>, Edito
 
     return {
       root: css({
-        padding: theme.spacing(1),
         backgroundColor: theme.colors.background.secondary,
         borderRadius: theme.shape.borderRadius(1),
       }),
