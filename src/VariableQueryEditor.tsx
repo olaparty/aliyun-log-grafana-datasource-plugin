@@ -7,6 +7,7 @@ import { SLSDataSource } from './datasource';
 import MonacoQueryField from 'SLS-monaco-editor/MonacoQueryField';
 import MonacoQueryFieldOld from 'SLS-monaco-editor/MonacoQueryFieldOld';
 import { version } from 'const';
+import { SLSQueryEditor } from 'QueryEditor';
 // const { FormField } = LegacyForms;
 
 type Props = QueryEditorProps<SLSDataSource, SLSQuery, SLSDataSourceOptions>;
@@ -85,4 +86,11 @@ export class SLSVariableQueryEditor extends PureComponent<Props> {
       </>
     );
   }
+}
+
+
+
+
+export function SLSVariableQueryEditorWapper (props: Props) {
+  return <SLSQueryEditor {...props} isVariable />
 }

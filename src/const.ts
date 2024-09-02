@@ -72,6 +72,16 @@ export const xSelectOptions = [
   //   description: 'This is a very elaborate description, describing all the wonders in the world.',
   //   imgUrl: 'https://placekitten.com/40/40',
   // },
-]
+];
+
+export const dataSourceType = [
+  { label: 'ALL(SQL)', value: 'all' },
+  {
+    label: 'Logstore(SQL)',
+    value: 'logstore',
+  },
+  { label: 'Metricstore(SQL)', value: 'metricsql' },
+  { label: 'Metricstore(PromQL)', value: 'metricstore' },
+];
 
 export const version = (window as any)?.grafanaBootData?.settings?.buildInfo?.version ?? '';
