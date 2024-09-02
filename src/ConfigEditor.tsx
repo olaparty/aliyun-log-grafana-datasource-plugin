@@ -136,7 +136,7 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
           {/* EndPonit */}
           <InlineField
             htmlFor="connection-url"
-            label={'Endpoint'}
+            label={'Endpoint *'}
             labelWidth={24}
             tooltip={
               <>
@@ -146,7 +146,6 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
               </>
             }
             grow
-            required
             interactive
           >
             <Input
@@ -161,11 +160,10 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
           {/*  Project */}
           <InlineField
             htmlFor="connection-project"
-            label={'Project'}
+            label={'Project *'}
             tooltip={'Project'}
             labelWidth={24}
             grow
-            required
             interactive
           >
             <Input
@@ -180,11 +178,10 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
           {/* AccessKeyID */}
           <InlineField
             htmlFor="connection-AccessKeyID"
-            label={'AccessKeyID'}
+            label={'AccessKeyID *'}
             labelWidth={24}
             tooltip={'阿里云账号AccessKeyID'}
             grow
-            required
             interactive
           >
             <SecretInput
@@ -200,11 +197,10 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
           {/* AccessKeySecret */}
           <InlineField
             htmlFor="connection-AccessKeySecret"
-            label={'AccessKeySecret'}
+            label={'AccessKeySecret *'}
             labelWidth={24}
             tooltip={'阿里云账号AccessKeySecret'}
             grow
-            required
             interactive
           >
             <SecretInput
@@ -233,6 +229,7 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
             <Input
               id="other-logstore-url"
               aria-label="logstore"
+              placeholder='请输入默认的Logstore'
               onChange={this.onLogStoreChange}
               value={jsonData.logstore || ''}
             />
