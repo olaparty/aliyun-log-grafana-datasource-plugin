@@ -2,7 +2,7 @@
 
 # 2.33 (2024-09-01)
 
-- 插件配置界面优化,必填项为 `Endpoint Project AccessKeyID AccessKeySecret`, 不在强制要求填写 `LogStore`;如果不填写 `LogStore`, 请确保你的填写的 Ak 具备当前 Project 的 ListProject 权限，参考 [ListLogStores - 列出 LogStore](https://help.aliyun.com/zh/sls/developer-reference/api-sls-2020-12-30-listlogstores)
+- 插件配置界面优化,必填项为 `Endpoint Project AccessKeyID AccessKeySecret`, 不再强制要求填写 `LogStore`;如果不填写 `LogStore`, 请确保你的填写的 Ak 具备当前 Project 的 ListProject 权限，参考 [ListLogStores - 列出 LogStore](https://help.aliyun.com/zh/sls/developer-reference/api-sls-2020-12-30-listlogstores)
 - 插件支持自定义 Headers, 但仅在数据源类型为`MetricStore(PrmQL)` 生效
   ![图 2](./img/2.33/config_editor_2.33.png)
 - 插件编辑界面优化,支持切换数据源类型和在编辑界面下拉选择具体[日志库(Logstore)](https://help.aliyun.com/zh/sls/product-overview/logstore)或[时序库(MetricStore)](https://help.aliyun.com/zh/sls/product-overview/metricstore?spm=a2c4g.11186623.0.0.2e8b60d1YQznSr)
