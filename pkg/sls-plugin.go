@@ -270,13 +270,11 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	from := query.TimeRange.From.Unix()
 	to := query.TimeRange.To.Unix()
 
-	var ycols []string
-	offset := (queryInfo.CurrentPage - 1) * queryInfo.LogsPerPage
 	var logStore string
-	if queryInfo.LogStore != "" {
-		logStore = queryInfo.LogStore
+	if queryInfo.Logstore != "" {
+		logStore = queryInfo.Logstore
 	} else {
-		logStore = logSource.LogStore
+		logStore = logSource.Logstore
 	}
 
 	// 如果 logstore 为空 返回错误
@@ -310,17 +308,34 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 		return
 	}
 
-	getLogsResp, err := client.GetLogs(logSource.Project, logStore, "",
-		from, to, queryInfo.Query, queryInfo.LogsPerPage, offset, true)
-	if err != nil {
-		log.DefaultLogger.Error("GetLogs ", "query : ", queryInfo.Query, "error ", err)
-		response.Error = err
-		ch <- Result{
-			refId:        refId,
-			dataResponse: response,
+	var ycols []string
+	queryCount := ds.GetQueryCount(queryInfo)
+	getLogsResp := &sls.GetLogsResponse{}
+	for i := 0; i < int(queryCount); i++ {
+		offset := (queryInfo.CurrentPage - 1) * queryInfo.LogsPerPage
+		tem, err := client.GetLogs(logSource.Project, logStore, "",
+			from, to, queryInfo.Query, queryInfo.LogsPerPage, offset, true)
+		if err != nil {
+			log.DefaultLogger.Error("GetLogs ", "query : ", queryInfo.Query, "error ", err)
+			response.Error = err
+			ch <- Result{
+				refId:        refId,
+				dataResponse: response,
+			}
+			return
 		}
-		return
+		if i == 0 {
+			getLogsResp = tem
+		} else {
+			getLogsResp.Logs = append(getLogsResp.Logs, tem.Logs...)
+			getLogsResp.Count = getLogsResp.Count + tem.Count
+		}
+		if tem.Count < queryInfo.LogsPerPage {
+			break
+		}
+		queryInfo.CurrentPage++
 	}
+
 	logs := getLogsResp.Logs
 	c := &Contents{}
 	err = json.Unmarshal([]byte(getLogsResp.Contents), &c)
@@ -411,11 +426,32 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	}
 }
 
+func (ds *SlsDatasource) GetQueryCount(queryInfo *QueryInfo) int64 {
+	queryInfo.LogsPerPage = 100
+	if strings.Contains(strings.ToUpper(queryInfo.Query), "SELECT") && strings.Contains(queryInfo.Query, "|") {
+		return 1
+	}
+	if queryInfo.TotalLogs >= 5000 {
+		queryInfo.TotalLogs = 5000
+	}
+	if queryInfo.TotalLogs <= 0 {
+		queryInfo.TotalLogs = 1
+	}
+	if queryInfo.TotalLogs < queryInfo.LogsPerPage {
+		queryInfo.LogsPerPage = queryInfo.TotalLogs
+	}
+
+	if queryInfo.LogsPerPage > 0 {
+		return (queryInfo.TotalLogs + queryInfo.LogsPerPage - 1) / queryInfo.LogsPerPage
+	}
+	return 1
+}
+
 func (ds *SlsDatasource) getMetricLogs(_ chan Result, query backend.DataQuery, queryInfo *QueryInfo, logSource *LogSource, response backend.DataResponse, frames *data.Frames) error {
 	project := logSource.Project
 	endpoint := logSource.Endpoint
 	headers := logSource.Headers
-	metricStore := queryInfo.LogStore
+	metricStore := queryInfo.Logstore
 	queryType := queryInfo.QueryType
 	intervalMs := queryInfo.IntervalMs
 
@@ -926,7 +962,14 @@ func (ds *SlsDatasource) BuildLogs(logs []map[string]string, ycols []string, fra
 			message = message + k + `="` + strings.ReplaceAll(alog[k], `"`, `'`) + `" `
 		}
 		timeValue, _ := strconv.ParseFloat(alog["__time__"], 64)
-		t := time.Unix(int64(timeValue), 0)
+
+		var t time.Time
+		if ns, ok := alog["__time_ns_part__"]; ok {
+			ns, _ := strconv.ParseInt(ns, 10, 64)
+			t = time.Unix(int64(timeValue), ns)
+		} else {
+			t = time.Unix(int64(timeValue), 0)
+		}
 		times = append(times, t)
 		values = append(values, message)
 	}

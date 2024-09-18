@@ -5,12 +5,12 @@ import { InlineFormLabel, Icon, Input, Tooltip, InlineField, Button, ConfirmModa
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 // import { EditorField, EditorRow, QueryOptionGroup } from '@grafana/experimental';
 
-import { SLSDataSource } from './datasource';
+import { SLSDataSource, replaceFormat } from './datasource';
 import { defaultEidtorQuery, defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
 import { dataSourceType, version, xSelectOptions } from './const';
 import MonacoQueryField from './SLS-monaco-editor/MonacoQueryField';
 import MonacoQueryFieldOld from 'SLS-monaco-editor/MonacoQueryFieldOld';
-import { getBackendSrv, getDataSourceSrv } from '@grafana/runtime';
+import { getBackendSrv, getDataSourceSrv, getTemplateSrv } from '@grafana/runtime';
 import { Base64 } from 'js-base64';
 import { SelectTips } from 'SelectTips';
 import EditorRow from './components/QueryEditor/EditorRow';
@@ -44,6 +44,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
     url: '',
     message: '',
     logstoreList: [],
+    logstore: ''
   };
 
   componentDidMount() {
@@ -108,6 +109,9 @@ export class SLSQueryEditor extends PureComponent<Props> {
 
   onLogstoreChange = (v: SelectableValue) => {
     const { onChange, query } = this.props;
+    this.setState({
+      logstore: v.value,
+    });
     onChange({ ...query, logstore: v.value });
   };
 
@@ -133,10 +137,19 @@ export class SLSQueryEditor extends PureComponent<Props> {
     onRunQuery();
   };
 
+  onTotalLogsChange = (event: FormEvent<HTMLInputElement>) => {
+    const { onChange, query, onRunQuery } = this.props;
+    onChange({ ...query, totalLogs: Number(event.currentTarget.value) });
+    // executes the query
+    onRunQuery();
+  };
+
   gotoSLS = () => {
     const { datasource, query, range } = this.props;
     const startTime = range?.from.unix() ?? Math.round(Date.now() / 1000 - 900);
     const endTime = range?.to.unix() ?? Math.round(Date.now() / 1000);
+    const logstore = this.state.logstore
+    const queryStr = getTemplateSrv().replace(query.query ?? '', {}, replaceFormat);
 
     try {
       this.setState({
@@ -151,8 +164,9 @@ export class SLSQueryEditor extends PureComponent<Props> {
           headers: { 'Content-Type': 'application/json' },
           data: {
             Encoding: `encode=base64&queryString=${encodeURIComponent(
-              Base64.encode(query.query ?? '')
+              Base64.encode(queryStr ?? '')
             )}&queryTimeType=99&startTime=${startTime}&endTime=${endTime}`,
+            logstore: logstore,
           },
         })
         .then((response) => {
@@ -234,7 +248,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
 
     const settings = getDataSourceSrv().getInstanceSettings(datasource.uid)?.jsonData || {};
     const dq = defaults(this.props.query, isVariable ? defaultEidtorQuery : defaultQuery);
-    const { query, xcol, ycol, type, logstore, queryType, legendFormat, step } = dq;
+    const { query, xcol, ycol, type, logstore, queryType, legendFormat, step, totalLogs } = dq;
     const { logstore: defaultLogstore } = settings as SLSDataSourceOptions;
     const { logstoreList } = this.state;
     const uniqLogstoreList = [...new Set([defaultLogstore, ...logstoreList])].map((i) =>
@@ -355,7 +369,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
             <InlineField label={'xcol'} labelWidth={12}>
               <div style={{ display: 'flex' }}>
                 <Select
-                  width={this.state.xColDisabled ? 40 : 20}
+                  width={20}
                   menuShouldPortal
                   options={xSelectOptions}
                   value={this.autoSelect(xcol ?? 'time')}
@@ -391,6 +405,23 @@ export class SLSQueryEditor extends PureComponent<Props> {
                 />
               </div>
             </InlineField>
+
+            { this.props.query.xcol === '' && (
+              <InlineField label={'totalLogs'} labelWidth={12}>
+                <Input
+                  width={20}
+                  prefix={<Icon name="text-fields" />}
+                  value={totalLogs}
+                  onChange={this.onTotalLogsChange}
+                  label="totalLogs"
+                  suffix={
+                    <Tooltip content={<SelectTips type="totalLogs" />} interactive theme="info-alt">
+                      <Icon name="question-circle" />
+                    </Tooltip>
+                  }
+                />
+              </InlineField>
+            )}
           </div>
         )}
 

@@ -92,6 +92,7 @@ func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request)
 
 type Data struct {
 	Encoding string `json:"encoding"`
+	Logstore string `json:"logstore"`
 }
 
 func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +114,7 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 	sk := config.AccessKeySecret
 	arn := config.RoleArn
 	prj := config.Project
-	logstore := config.LogStore
+	logstore := config.Logstore
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -126,6 +127,10 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(body, &data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	if data.Logstore != "" {
+		logstore = data.Logstore
 	}
 
 	pattern := `^acs:ram::\d+:role\/[^\/]+$`

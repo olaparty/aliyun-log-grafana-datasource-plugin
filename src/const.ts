@@ -54,6 +54,24 @@ export const yColInfoSeries = [
   },
 ];
 
+export const totalLogsInfoSeries = [
+  {
+    color: '#ffca3a',
+    label: '只对 Query 查询语句生效，分析语句无效',
+    value: 'Only effective for search statements, not applicable to analytic statements',
+  },
+  {
+    color: '#8ac926',
+    label: '最小值为 1 条',
+    value: 'Minimum value is 1',
+  },
+  {
+    color: '#1982c4',
+    label: '最大值为 5000 条',
+    value: 'Maximum value is 5000',
+  },
+];
+
 export const xSelectOptions = [
   {
     label: 'TimeSeries / Custom',
