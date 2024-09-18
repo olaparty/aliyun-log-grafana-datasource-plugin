@@ -271,10 +271,10 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	to := query.TimeRange.To.Unix()
 
 	var logStore string
-	if queryInfo.Logstore != "" {
-		logStore = queryInfo.Logstore
+	if queryInfo.LogStore != "" {
+		logStore = queryInfo.LogStore
 	} else {
-		logStore = logSource.Logstore
+		logStore = logSource.LogStore
 	}
 
 	// 如果 logstore 为空 返回错误
@@ -451,7 +451,7 @@ func (ds *SlsDatasource) getMetricLogs(_ chan Result, query backend.DataQuery, q
 	project := logSource.Project
 	endpoint := logSource.Endpoint
 	headers := logSource.Headers
-	metricStore := queryInfo.Logstore
+	metricStore := queryInfo.LogStore
 	queryType := queryInfo.QueryType
 	intervalMs := queryInfo.IntervalMs
 

@@ -114,7 +114,7 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 	sk := config.AccessKeySecret
 	arn := config.RoleArn
 	prj := config.Project
-	logstore := config.Logstore
+	logstore := config.LogStore
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

@@ -15,7 +15,7 @@ type Header struct {
 type LogSource struct {
 	Endpoint        string
 	Project         string `json:"project"`
-	Logstore        string `json:"logstore"`
+	LogStore        string `json:"logstore"`
 	RoleArn         string `json:"roleArn"`
 	AccessKeyId     string
 	AccessKeySecret string
@@ -30,7 +30,7 @@ type QueryInfo struct {
 	Ycol         string `json:"ycol"`
 	LogsPerPage  int64  `json:"logsPerPage"`
 	CurrentPage  int64  `json:"currentPage"`
-	Logstore     string `json:"logstore"`
+	LogStore     string `json:"logStore"`
 	LegendFormat string `json:"legendFormat"`
 	QueryType    string `json:"queryType"`
 	Step         string `json:"step"`
