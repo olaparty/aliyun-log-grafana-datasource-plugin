@@ -409,6 +409,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
             { this.props.query.xcol === '' && (
               <InlineField label={'totalLogs'} labelWidth={12}>
                 <Input
+                  type='number'
                   width={20}
                   prefix={<Icon name="text-fields" />}
                   value={totalLogs}
