@@ -35,6 +35,7 @@ type QueryInfo struct {
 	QueryType    string `json:"queryType"`
 	Step         string `json:"step"`
 	IntervalMs   int64  `json:"intervalMs"`
+	TotalLogs    int64  `json:"totalLogs"`
 }
 
 type Result struct {

@@ -11,6 +11,7 @@ export interface SLSQuery extends DataQuery {
   legendFormat?: string // 图例 format
   step?: string // promql step
   queryType?: 'range' | 'instant'; // 查询类型
+  totalLogs?: number
 }
 
 export const defaultQuery: Partial<SLSQuery> = {
@@ -20,6 +21,7 @@ export const defaultQuery: Partial<SLSQuery> = {
   ycol: '',
   logsPerPage: 100,
   currentPage: 1,
+  totalLogs: 100,
 };
 export const defaultEidtorQuery: Partial<SLSQuery> = {
   type: 'all',
@@ -28,6 +30,7 @@ export const defaultEidtorQuery: Partial<SLSQuery> = {
   ycol: '',
   logsPerPage: 100,
   currentPage: 1,
+  totalLogs: 100,
 };
 
 /**

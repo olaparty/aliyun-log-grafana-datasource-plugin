@@ -1,5 +1,5 @@
-import { Card, SeriesTable } from '@grafana/ui';
-import { version, xColInfoSeries, yColInfoSeries } from 'const';
+import { Card, SeriesTable, SeriesTableRowProps } from '@grafana/ui';
+import { version, xColInfoSeries, yColInfoSeries, totalLogsInfoSeries } from 'const';
 import React from 'react';
 
 export function SelectTips(props: { type: string }) {
@@ -10,7 +10,20 @@ export function SelectTips(props: { type: string }) {
     version.startsWith('8.2') ||
     version.startsWith('8.3') ||
     version.startsWith('7');
-  const series = props.type === 'xcol' ? xColInfoSeries : yColInfoSeries;
+  let series = [] as SeriesTableRowProps[]
+  switch(props.type) {
+    case 'ycol':
+      series = yColInfoSeries
+      break
+    case 'xcol':
+      series = xColInfoSeries
+      break
+    case 'totalLogs':
+      series = totalLogsInfoSeries
+      break
+    default:
+      break
+  }
   return isOld ? (
     <table>
       {series.map((v, i) => {

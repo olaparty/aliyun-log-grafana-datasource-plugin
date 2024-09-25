@@ -226,6 +226,28 @@ function safeJsonStringify(obj: any) {
   }
 }
 
+export function replaceFormat(
+  value: { forEach: (arg0: (v: string) => void) => void; join: (arg0: string) => void },
+  variable: { multi: any; includeAll: any; name: string; label: any; description: string }
+) {
+if (typeof value === 'object' && (variable.multi || variable.includeAll)) {
+  const a: string[] = [];
+  value.forEach(function (v: string) {
+    if (variable.name === variable.label || (variable.description && variable.description.indexOf('field_search') >= 0)) {
+      a.push('"' + variable.name + '":"' + v + '"');
+    } else {
+      a.push(v);
+    }
+  });
+  return a.join(' OR ');
+}
+if (_.isArray(value)) {
+  return value.join(' OR ');
+}
+return value;
+}
+
+
 export function replaceQueryParameters(q: SLSQuery | string, options: DataQueryRequest<SLSQuery>) {
   if (typeof q !== 'string' && q.hide) {
     return;
@@ -239,29 +261,7 @@ export function replaceQueryParameters(q: SLSQuery | string, options: DataQueryR
   let query = getTemplateSrv().replace(
     varQuery,
     options.scopedVars,
-    function (
-      value: { forEach: (arg0: (v: string) => void) => void; join: (arg0: string) => void },
-      variable: { multi: any; includeAll: any; name: string; label: any; description: string }
-    ) {
-      if (typeof value === 'object' && (variable.multi || variable.includeAll)) {
-        const a: string[] = [];
-        value.forEach(function (v: string) {
-          if (
-            variable.name === variable.label ||
-            (variable.description && variable.description.indexOf('field_search') >= 0)
-          ) {
-            a.push('"' + variable.name + '":"' + v + '"');
-          } else {
-            a.push(v);
-          }
-        });
-        return a.join(' OR ');
-      }
-      if (_.isArray(value)) {
-        return value.join(' OR ');
-      }
-      return value;
-    }
+    replaceFormat
   );
 
   const re = /\$([0-9]+)([dmhs])/g;
