@@ -1,5 +1,14 @@
 # Changelog
 
+# 2.34 (2024-09-23)
+
+- 优化 table/log 视图
+  - 支持当存在纳秒字段时, time 按纳秒精度排序。
+  - 支持修改总查询记录数 totalLogs, 默认值为 100, 最小值为 1, 最大值为 5000, 仅对 Query 查询语句生效, 分析语句无效
+    ![image.png](./img/2.34/totalLogs_2.34.png)
+- 修复 gotoSLS 仅可跳转至数据源中设置的默认 Logstore 的问题
+- 修复 gotoSLS 跳转后变量替换为具体值的问题
+
 # 2.33 (2024-09-01)
 
 - 插件配置界面优化,必填项为 `Endpoint Project AccessKeyID AccessKeySecret`, 不再强制要求填写 `LogStore`;如果不填写 `LogStore`, 请确保你的填写的 Ak 具备当前 Project 的 ListProject 权限，参考 [ListLogStores - 列出 LogStore](https://help.aliyun.com/zh/sls/developer-reference/api-sls-2020-12-30-listlogstores)
