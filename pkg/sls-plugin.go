@@ -313,8 +313,15 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	getLogsResp := &sls.GetLogsResponse{}
 	for i := 0; i < int(queryCount); i++ {
 		offset := (queryInfo.CurrentPage - 1) * queryInfo.LogsPerPage
-		tem, err := client.GetLogs(logSource.Project, logStore, "",
-			from, to, queryInfo.Query, queryInfo.LogsPerPage, offset, true)
+		getLogsReq := &sls.GetLogRequest{
+			From:    from,
+			To:      to,
+			Query:   queryInfo.Query,
+			Lines:   queryInfo.LogsPerPage,
+			Offset:  offset,
+			Reverse: true,
+		}
+		tem, err := client.GetLogsV2(logSource.Project, logStore, getLogsReq)
 		if err != nil {
 			log.DefaultLogger.Error("GetLogs ", "query : ", queryInfo.Query, "error ", err)
 			response.Error = err
