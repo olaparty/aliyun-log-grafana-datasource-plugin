@@ -49,11 +49,14 @@ func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	client := &sls.Client{
-		Endpoint:        config.Endpoint,
-		AccessKeyID:     config.AccessKeyId,
-		AccessKeySecret: config.AccessKeySecret,
-		UserAgent:       "grafana-go",
+	provider := sls.NewStaticCredentialsProvider(config.AccessKeyId, config.AccessKeySecret, "")
+	client := sls.CreateNormalInterfaceV2(config.Endpoint, provider)
+	client.SetUserAgent("grafana-go")
+
+	if config.Region != "" {
+		log.DefaultLogger.Info("AuthV4", config.Region)
+		client.SetAuthVersion(sls.AuthV4)
+		client.SetRegion(config.Region)
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -73,8 +76,15 @@ func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request)
 
 	log.DefaultLogger.Info("getBODY", "body", body, "bodyData", data)
 
+	project, err := client.GetProject(data.Project)
+	if err != nil {
+		response["message"] = err.Error()
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	// 拿当前 Project 的信息
-	list, err := client.ListLogStoreV2(data.Project, 0, 500, data.TelemetryType)
+	list, err := project.ListLogStoreV2(0, 500, data.TelemetryType)
 	if err != nil {
 		response["message"] = err.Error()
 		http.Error(w, err.Error(), http.StatusBadRequest)

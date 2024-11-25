@@ -25,6 +25,11 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
     // console.log("into query.")
     options.targets.forEach((q: SLSQuery) => {
       q.query = replaceQueryParameters(q, options);
+      if(/__custom__@/.test(q?.logstore ?? '')){
+        const currentLogstore: any = getTemplateSrv().getVariables().find((item) => item.name === q?.logstore?.split('@')[1]);
+        const value = currentLogstore?.current?.value;
+        q.logstore = value;
+      }
     });
     if (options.targets[0].xcol === 'trace') {
       return super.query(options).pipe(map(responseToDataQueryResponse));
@@ -230,6 +235,7 @@ export function replaceFormat(
   value: { forEach: (arg0: (v: string) => void) => void; join: (arg0: string) => void },
   variable: { multi: any; includeAll: any; name: string; label: any; description: string }
 ) {
+  console.log(variable)
 if (typeof value === 'object' && (variable.multi || variable.includeAll)) {
   const a: string[] = [];
   value.forEach(function (v: string) {
@@ -258,6 +264,7 @@ export function replaceQueryParameters(q: SLSQuery | string, options: DataQueryR
   } else {
     varQuery = q.query;
   }
+  console.log(options)
   let query = getTemplateSrv().replace(
     varQuery,
     options.scopedVars,

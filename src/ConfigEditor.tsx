@@ -36,6 +36,14 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
     onOptionsChange({ ...options, jsonData });
   };
 
+  onRegionChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { onOptionsChange, options } = this.props;
+    const jsonData = {
+      ...options.jsonData,
+      region: event.target.value,
+    };
+    onOptionsChange({ ...options, jsonData });
+  };
   onRoleArnChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const jsonData = {
@@ -167,7 +175,7 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
             interactive
           >
             <Input
-              id="connection-url"
+              id="connection-project"
               aria-label="Project"
               onChange={this.onProjectChange}
               value={jsonData.project || ''}
@@ -210,6 +218,31 @@ export class SLSConfigEditor extends PureComponent<Props, State> {
               placeholder={'阿里云账号AccessKeySecret'}
               onReset={this.onResetAKSecret}
               onChange={this.onAKSecretChange}
+            />
+          </InlineField>
+
+          {/* Other  */}
+          <InlineField
+            style={{ marginTop: '8px' }}
+            htmlFor="connection-Region"
+            label={'Region *'}
+            labelWidth={24}
+            tooltip={
+              <>
+                Region
+                <br />
+                (for example: cn-hangzhou)
+              </>
+            }
+            grow
+            interactive
+          >
+            <Input
+              id="connection-Region"
+              aria-label="region"
+              onChange={this.onRegionChange}
+              value={jsonData.region || ''}
+              placeholder={'请输入 Region(选填, optional)'}
             />
           </InlineField>
         </ConfigSection>
