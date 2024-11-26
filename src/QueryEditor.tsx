@@ -265,7 +265,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
     });
     let uniqLogstoreList = [...new Set([defaultLogstore, ...logstoreList])].map((i) =>
       i === defaultLogstore
-        ? { label: i, value: i, description: 'Defalut Logstore', id: i }
+        ? { label: i, value: i, description: 'Default Logstore', id: i }
         : { label: i, value: i, id: i }
     );
     if (customLogstore.length > 0) {
