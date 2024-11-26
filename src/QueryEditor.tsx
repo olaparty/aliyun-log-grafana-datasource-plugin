@@ -152,7 +152,12 @@ export class SLSQueryEditor extends PureComponent<Props> {
     const { datasource, query, range } = this.props;
     const startTime = range?.from.unix() ?? Math.round(Date.now() / 1000 - 900);
     const endTime = range?.to.unix() ?? Math.round(Date.now() / 1000);
-    const logstore = this.state.logstore
+    let logstore = this.state.logstore
+    if(/__custom__@/.test(logstore ?? '')){
+      const currentLogstore: any = getTemplateSrv().getVariables().find((item) => item.name === logstore?.split('@')[1]);
+      const value = currentLogstore?.current?.value;
+      logstore = value;
+    }
     const queryStr = getTemplateSrv().replace(query.query ?? '', {}, replaceFormat);
 
     try {
