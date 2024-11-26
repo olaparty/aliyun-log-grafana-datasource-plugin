@@ -54,7 +54,6 @@ func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request)
 	client.SetUserAgent("grafana-go")
 
 	if config.Region != "" {
-		log.DefaultLogger.Info("AuthV4", config.Region)
 		client.SetAuthVersion(sls.AuthV4)
 		client.SetRegion(config.Region)
 	}

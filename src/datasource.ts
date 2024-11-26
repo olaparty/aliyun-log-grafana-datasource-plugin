@@ -235,7 +235,6 @@ export function replaceFormat(
   value: { forEach: (arg0: (v: string) => void) => void; join: (arg0: string) => void },
   variable: { multi: any; includeAll: any; name: string; label: any; description: string }
 ) {
-  console.log(variable)
 if (typeof value === 'object' && (variable.multi || variable.includeAll)) {
   const a: string[] = [];
   value.forEach(function (v: string) {
@@ -264,7 +263,6 @@ export function replaceQueryParameters(q: SLSQuery | string, options: DataQueryR
   } else {
     varQuery = q.query;
   }
-  console.log(options)
   let query = getTemplateSrv().replace(
     varQuery,
     options.scopedVars,
