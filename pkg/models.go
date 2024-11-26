@@ -17,6 +17,7 @@ type LogSource struct {
 	Project         string `json:"project"`
 	LogStore        string `json:"logstore"`
 	RoleArn         string `json:"roleArn"`
+	Region          string
 	AccessKeyId     string
 	AccessKeySecret string
 	Headers         []Header `json:"headers"`

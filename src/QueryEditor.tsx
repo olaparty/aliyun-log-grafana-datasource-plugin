@@ -44,7 +44,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
     url: '',
     message: '',
     logstoreList: [],
-    logstore: ''
+    logstore: '',
   };
 
   componentDidMount() {
@@ -109,10 +109,14 @@ export class SLSQueryEditor extends PureComponent<Props> {
 
   onLogstoreChange = (v: SelectableValue) => {
     const { onChange, query } = this.props;
+    let value = v.value;
+    if (value === '__custom__') {
+      value = `__custom__@${v.id}`;
+    }
     this.setState({
-      logstore: v.value,
+      logstore: value,
     });
-    onChange({ ...query, logstore: v.value });
+    onChange({ ...query, logstore: value });
   };
 
   onQueryTypeChange = (v: any) => {
@@ -148,7 +152,12 @@ export class SLSQueryEditor extends PureComponent<Props> {
     const { datasource, query, range } = this.props;
     const startTime = range?.from.unix() ?? Math.round(Date.now() / 1000 - 900);
     const endTime = range?.to.unix() ?? Math.round(Date.now() / 1000);
-    const logstore = this.state.logstore
+    let logstore = this.state.logstore
+    if(/__custom__@/.test(logstore ?? '')){
+      const currentLogstore: any = getTemplateSrv().getVariables().find((item) => item.name === logstore?.split('@')[1]);
+      const value = currentLogstore?.current?.value;
+      logstore = value;
+    }
     const queryStr = getTemplateSrv().replace(query.query ?? '', {}, replaceFormat);
 
     try {
@@ -245,15 +254,30 @@ export class SLSQueryEditor extends PureComponent<Props> {
 
   render() {
     const { isVariable, datasource } = this.props;
-
     const settings = getDataSourceSrv().getInstanceSettings(datasource.uid)?.jsonData || {};
     const dq = defaults(this.props.query, isVariable ? defaultEidtorQuery : defaultQuery);
     const { query, xcol, ycol, type, logstore, queryType, legendFormat, step, totalLogs } = dq;
     const { logstore: defaultLogstore } = settings as SLSDataSourceOptions;
     const { logstoreList } = this.state;
-    const uniqLogstoreList = [...new Set([defaultLogstore, ...logstoreList])].map((i) =>
-      i === defaultLogstore ? { label: i, value: i, description: 'Defalut Logstore' } : { label: i, value: i }
+    const variables = getTemplateSrv().getVariables();
+    const customLogstore = variables.filter((item) => {
+      return item.type === 'custom' && (/logstore/i.test(item?.label ?? '') || /logstore/i.test(item.name));
+    });
+    let uniqLogstoreList = [...new Set([defaultLogstore, ...logstoreList])].map((i) =>
+      i === defaultLogstore
+        ? { label: i, value: i, description: 'Default Logstore', id: i }
+        : { label: i, value: i, id: i }
     );
+    if (customLogstore.length > 0) {
+      for (const ls of customLogstore) {
+        uniqLogstoreList.unshift({
+          label: ls?.label ?? ls.name,
+          value: '__custom__',
+          id: ls.name,
+          description: 'Custom Logstore',
+        });
+      }
+    }
 
     return (
       <>

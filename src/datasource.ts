@@ -25,6 +25,11 @@ export class SLSDataSource extends DataSourceWithBackend<SLSQuery, SLSDataSource
     // console.log("into query.")
     options.targets.forEach((q: SLSQuery) => {
       q.query = replaceQueryParameters(q, options);
+      if(/__custom__@/.test(q?.logstore ?? '')){
+        const currentLogstore: any = getTemplateSrv().getVariables().find((item) => item.name === q?.logstore?.split('@')[1]);
+        const value = currentLogstore?.current?.value;
+        q.logstore = value;
+      }
     });
     if (options.targets[0].xcol === 'trace') {
       return super.query(options).pipe(map(responseToDataQueryResponse));

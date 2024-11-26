@@ -76,11 +76,13 @@ func (ds *SlsDatasource) QueryData(ctx context.Context, req *backend.QueryDataRe
 		return
 	}
 
-	client := &sls.Client{
-		Endpoint:        config.Endpoint,
-		AccessKeyID:     config.AccessKeyId,
-		AccessKeySecret: config.AccessKeySecret,
-		UserAgent:       "grafana-go",
+	provider := sls.NewStaticCredentialsProvider(config.AccessKeyId, config.AccessKeySecret, "")
+	client := sls.CreateNormalInterfaceV2(config.Endpoint, provider)
+	client.SetUserAgent("grafana-go")
+
+	if config.Region != "" {
+		client.SetAuthVersion(sls.AuthV4)
+		client.SetRegion(config.Region)
 	}
 
 	// create response struct
@@ -135,11 +137,13 @@ func (ds *SlsDatasource) CheckHealth(_ context.Context, req *backend.CheckHealth
 		return nil, err
 	}
 
-	client := &sls.Client{
-		Endpoint:        config.Endpoint,
-		AccessKeyID:     config.AccessKeyId,
-		AccessKeySecret: config.AccessKeySecret,
-		UserAgent:       "grafana-go",
+	provider := sls.NewStaticCredentialsProvider(config.AccessKeyId, config.AccessKeySecret, "")
+	client := sls.CreateNormalInterfaceV2(config.Endpoint, provider)
+	client.SetUserAgent("grafana-go")
+
+	if config.Region != "" {
+		client.SetAuthVersion(sls.AuthV4)
+		client.SetRegion(config.Region)
 	}
 
 	var status = backend.HealthStatusOk
@@ -233,7 +237,7 @@ func (ds *SlsDatasource) SortLogs(logs []map[string]string, col string) {
 	})
 }
 
-func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, client *sls.Client, logSource *LogSource) {
+func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, client sls.ClientInterface, logSource *LogSource) {
 	response := backend.DataResponse{}
 	refId := query.RefID
 	queryInfo := &QueryInfo{}
