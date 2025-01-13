@@ -316,7 +316,11 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 	queryCount := ds.GetQueryCount(queryInfo)
 	getLogsResp := &sls.GetLogsResponse{}
 	for i := 0; i < int(queryCount); i++ {
-		offset := (queryInfo.CurrentPage - 1) * queryInfo.LogsPerPage
+		currentPage := queryInfo.CurrentPage
+		if currentPage <= 0 {
+			currentPage = 1
+		}
+		offset := (currentPage - 1) * queryInfo.LogsPerPage
 		getLogsReq := &sls.GetLogRequest{
 			From:    from,
 			To:      to,
