@@ -3,6 +3,7 @@
 # 2.37 (2025-01-13)
 
 - 修复 grafana 内部初始化 currentPage 的问题。
+- 修复自定义 logstore 在日志库列表展示不回显的问题；修复 gotoSLS 跳转到 defaultLogstore 的问题。
 
 # 2.36 (2024-11-25)
 
