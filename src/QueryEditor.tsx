@@ -110,9 +110,6 @@ export class SLSQueryEditor extends PureComponent<Props> {
   onLogstoreChange = (v: SelectableValue) => {
     const { onChange, query } = this.props;
     let value = v.value;
-    if (value === '__custom__') {
-      value = `__custom__@${v.id}`;
-    }
     this.setState({
       logstore: value,
     });
@@ -152,9 +149,12 @@ export class SLSQueryEditor extends PureComponent<Props> {
     const { datasource, query, range } = this.props;
     const startTime = range?.from.unix() ?? Math.round(Date.now() / 1000 - 900);
     const endTime = range?.to.unix() ?? Math.round(Date.now() / 1000);
-    let logstore = this.state.logstore
-    if(/__custom__@/.test(logstore ?? '')){
-      const currentLogstore: any = getTemplateSrv().getVariables().find((item) => item.name === logstore?.split('@')[1]);
+    // let logstore = this.state.logstore;
+    let logstore = this.state.logstore !== '' ? this.state.logstore : query.logstore;
+    if (/__custom__@/.test(logstore ?? '')) {
+      const currentLogstore: any = getTemplateSrv()
+        .getVariables()
+        .find((item) => item.name === logstore?.split('@')[1]);
       const value = currentLogstore?.current?.value;
       logstore = value;
     }
@@ -272,8 +272,8 @@ export class SLSQueryEditor extends PureComponent<Props> {
       for (const ls of customLogstore) {
         uniqLogstoreList.unshift({
           label: ls?.label ?? ls.name,
-          value: '__custom__',
-          id: ls.name,
+          value: `__custom__@${ls.name}`,
+          id: `__custom__@${ls.name}`,
           description: 'Custom Logstore',
         });
       }
