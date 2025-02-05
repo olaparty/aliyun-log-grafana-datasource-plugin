@@ -73,7 +73,7 @@ func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	log.DefaultLogger.Info("getBODY", "body", body, "bodyData", data)
+	log.DefaultLogger.Debug("getBODY", "body", body, "bodyData", data)
 
 	project, err := client.GetProject(data.Project)
 	if err != nil {
@@ -96,7 +96,7 @@ func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
-	log.DefaultLogger.Info("get logstore success.")
+	log.DefaultLogger.Debug("get logstore success.")
 }
 
 type Data struct {
@@ -212,7 +212,7 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
-		log.DefaultLogger.Info("Goto SLS with STS success.", url)
+		log.DefaultLogger.Debug("Goto SLS with STS success.", url)
 		return
 	}
 	url := "https://sls.console.aliyun.com/lognext/project/" + prj + "/logsearch/" + logstore + "?" + data.Encoding
@@ -220,7 +220,7 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
-	log.DefaultLogger.Info("Goto SLS with Normal jump success.", url)
+	log.DefaultLogger.Debug("Goto SLS with Normal jump success.", url)
 }
 
 func getSigninToken(id string, secret string, token string) (*SigninResponse, error) {
