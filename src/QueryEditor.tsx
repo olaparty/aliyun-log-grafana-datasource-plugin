@@ -1,7 +1,7 @@
 import { defaults } from 'lodash';
 
 import React, { ChangeEvent, PureComponent, FormEvent } from 'react';
-import { InlineFormLabel, Icon, Input, Tooltip, InlineField, Button, ConfirmModal, Select } from '@grafana/ui';
+import { InlineFormLabel, Icon, Input, Tooltip, InlineField, Button, ConfirmModal, Select, InlineSwitch } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 // import { EditorField, EditorRow, QueryOptionGroup } from '@grafana/experimental';
 
@@ -45,6 +45,8 @@ export class SLSQueryEditor extends PureComponent<Props> {
     message: '',
     logstoreList: [],
     logstore: '',
+    powerSql: false,
+    datasourceType: 'all'
   };
 
   componentDidMount() {
@@ -103,6 +105,9 @@ export class SLSQueryEditor extends PureComponent<Props> {
   onDatasourceTypeChange = (v: SelectableValue) => {
     const { onChange, query } = this.props;
     onChange({ ...query, type: v.value, logstore: '' });
+    this.setState({
+      datasourceType: v.value,
+    });
 
     this.getList(v.value);
   };
@@ -114,6 +119,15 @@ export class SLSQueryEditor extends PureComponent<Props> {
       logstore: value,
     });
     onChange({ ...query, logstore: value });
+  };
+
+  onPowerSqlChange = (v: SelectableValue) => {
+    const { onChange, query } = this.props;
+    const value = v.target.checked;
+    this.setState({
+      powerSql: value,
+    });
+    onChange({ ...query, powerSql: value });
   };
 
   onQueryTypeChange = (v: any) => {
@@ -176,6 +190,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
               Base64.encode(queryStr ?? '')
             )}&queryTimeType=99&startTime=${startTime}&endTime=${endTime}`,
             logstore: logstore,
+            type: this.state.datasourceType
           },
         })
         .then((response) => {
@@ -256,7 +271,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
     const { isVariable, datasource } = this.props;
     const settings = getDataSourceSrv().getInstanceSettings(datasource.uid)?.jsonData || {};
     const dq = defaults(this.props.query, isVariable ? defaultEidtorQuery : defaultQuery);
-    const { query, xcol, ycol, type, logstore, queryType, legendFormat, step, totalLogs } = dq;
+    const { query, xcol, ycol, type, logstore, queryType, legendFormat, step, totalLogs, powerSql } = dq;
     const { logstore: defaultLogstore } = settings as SLSDataSourceOptions;
     const { logstoreList } = this.state;
     const variables = getTemplateSrv().getVariables();
@@ -307,6 +322,13 @@ export class SLSQueryEditor extends PureComponent<Props> {
               <Icon name="external-link-alt" />
               {this.state.loading ? ' loading...' : ' goto SLS'}
             </Button>
+          )}
+
+          {!isVariable && this.state.datasourceType !== 'metricstore' && (
+            <InlineField label={'增强Sql'} style={{ marginLeft: '10px' }}>
+              <InlineSwitch onChange={this.onPowerSqlChange} value={powerSql} />
+            </InlineField>
+
           )}
         </div>
 
@@ -430,10 +452,10 @@ export class SLSQueryEditor extends PureComponent<Props> {
               </div>
             </InlineField>
 
-            { this.props.query.xcol === '' && (
+            {this.props.query.xcol === '' && (
               <InlineField label={'totalLogs'} labelWidth={12}>
                 <Input
-                  type='number'
+                  type="number"
                   width={20}
                   prefix={<Icon name="text-fields" />}
                   value={totalLogs}

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	sls "github.com/aliyun/aliyun-log-go-sdk"
+	"gitlab.alibaba-inc.com/rapt/go-security-utils/network"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -102,6 +103,7 @@ func (ds *SlsDatasource) getLogstoreList(w http.ResponseWriter, r *http.Request)
 type Data struct {
 	Encoding string `json:"encoding"`
 	Logstore string `json:"logstore"`
+	Type     string `json:"type"`
 }
 
 func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
@@ -136,6 +138,12 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(body, &data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	logstoreType := "/logsearch/"
+
+	if data.Type == "metricsql" || data.Type == "metricstore" {
+		logstoreType = "/metric/"
 	}
 
 	if data.Logstore != "" {
@@ -200,7 +208,7 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 		// 生成登录链接
 		loginUrl := "http://www.aliyun.com"
 		// destination := "http://sls4service.console.aliyun.com"
-		destination := "http://sls4service.console.aliyun.com/lognext/project/" + prj + "/logsearch/" + logstore + "?isShare=true&hideTopbar=true&hideSidebar=true&ignoreTabLocalStorage=true&" + data.Encoding
+		destination := "http://sls4service.console.aliyun.com/lognext/project/" + prj + logstoreType + logstore + "?isShare=true&hideTopbar=true&hideSidebar=true&ignoreTabLocalStorage=true&" + data.Encoding
 		url, err := genSigninUrl(signinToken, loginUrl, destination)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -215,7 +223,7 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 		log.DefaultLogger.Debug("Goto SLS with STS success.", url)
 		return
 	}
-	url := "https://sls.console.aliyun.com/lognext/project/" + prj + "/logsearch/" + logstore + "?" + data.Encoding
+	url := "https://sls.console.aliyun.com/lognext/project/" + prj + logstoreType + logstore + "?" + data.Encoding
 	response["url"] = url
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -230,7 +238,13 @@ func getSigninToken(id string, secret string, token string) (*SigninResponse, er
 	urlStr += "&SecurityToken=" + url.QueryEscape(token)
 	urlStr += "&TicketType=mini"
 
-	res, err := http.Get(urlStr)
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialContext = network.DefaultNetworkFilter.FilterHttpDialContext(transport.DialContext)
+	client := &http.Client{
+		Transport: transport,
+	}
+
+	res, err := client.Get(urlStr)
 	if err != nil {
 		return nil, err
 	}

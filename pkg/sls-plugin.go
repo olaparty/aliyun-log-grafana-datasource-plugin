@@ -322,12 +322,13 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 		}
 		offset := (currentPage - 1) * queryInfo.LogsPerPage
 		getLogsReq := &sls.GetLogRequest{
-			From:    from,
-			To:      to,
-			Query:   queryInfo.Query,
-			Lines:   queryInfo.LogsPerPage,
-			Offset:  offset,
-			Reverse: true,
+			From:     from,
+			To:       to,
+			Query:    queryInfo.Query,
+			Lines:    queryInfo.LogsPerPage,
+			Offset:   offset,
+			Reverse:  true,
+			PowerSQL: queryInfo.PowerSql,
 		}
 		tem, err := client.GetLogsV2(logSource.Project, logStore, getLogsReq)
 		if err != nil {
@@ -363,6 +364,11 @@ func (ds *SlsDatasource) QueryLogs(ch chan Result, query backend.DataQuery, clie
 		}
 		return
 	}
+	if getLogsResp.Progress != "Complete" {
+		log.DefaultLogger.Warn("GetLogs ", "Progress: ", getLogsResp.Progress, "warn: ", "incomplete logs, you can switch to powerSql")
+		response.Error = errors.New("incomplete logs, you can switch to powerSql")
+	}
+
 	keys := c.Keys
 	if compatible {
 		queryInfo.Ycol = strings.Replace(queryInfo.Ycol, " ", "", -1)

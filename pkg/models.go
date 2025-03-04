@@ -37,6 +37,7 @@ type QueryInfo struct {
 	Step         string `json:"step"`
 	IntervalMs   int64  `json:"intervalMs"`
 	TotalLogs    int64  `json:"totalLogs"`
+	PowerSql     bool   `json:"powerSql"`
 }
 
 type Result struct {
