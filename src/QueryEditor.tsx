@@ -324,7 +324,7 @@ export class SLSQueryEditor extends PureComponent<Props> {
             </Button>
           )}
 
-          {!isVariable && this.state.datasourceType !== 'metricstore' && (
+          {!isVariable && (this.state.datasourceType === 'logstore' || this.state.datasourceType === 'all') && (
             <InlineField label={'增强Sql'} style={{ marginLeft: '10px' }}>
               <InlineSwitch onChange={this.onPowerSqlChange} value={powerSql} />
             </InlineField>
