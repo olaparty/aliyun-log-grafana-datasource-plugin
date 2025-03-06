@@ -1,10 +1,10 @@
 import { defaults } from 'lodash';
 
 import React, { ChangeEvent, PureComponent, FormEvent } from 'react';
-import { InlineFormLabel, Icon, Input, Tooltip, InlineField, Button, ConfirmModal, Select, InlineSwitch } from '@grafana/ui';
+import { InlineFormLabel, Icon, Input, Tooltip, InlineField, Button, ConfirmModal, Select } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 // import { EditorField, EditorRow, QueryOptionGroup } from '@grafana/experimental';
-
+import { InlineSwitch } from './components/Switch/switch';
 import { SLSDataSource, replaceFormat } from './datasource';
 import { defaultEidtorQuery, defaultQuery, SLSDataSourceOptions, SLSQuery } from './types';
 import { dataSourceType, version, xSelectOptions } from './const';
