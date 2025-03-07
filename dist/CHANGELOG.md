@@ -1,5 +1,10 @@
 # Changelog
 
+# 2.38 (2025-03-03)
+- 修复时序库跳转 SLS 路径问题。
+- 日志输出级别整理，减少无用输出。
+- 支持‘增强Sql’查询，参考 [开启SQL独享版](https://help.aliyun.com/zh/sls/user-guide/enable-dedicated-sql/?spm=a2c4g.11186623.0.0.2c7771dclfhQou)
+
 # 2.37 (2025-01-13)
 
 - 修复 grafana 内部初始化 currentPage 的问题。

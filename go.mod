@@ -18,7 +18,7 @@ require (
 	cloud.google.com/go/pubsub v1.3.1 // indirect
 	cloud.google.com/go/storage v1.10.0 // indirect
 	dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9 // indirect
-	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
@@ -88,6 +88,7 @@ require (
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/duke-git/lancet v1.3.7 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/eapache/go-resiliency v1.1.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
@@ -258,8 +259,8 @@ require (
 	github.com/spf13/pflag v1.0.1 // indirect
 	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271 // indirect
 	github.com/streadway/handy v0.0.0-20200128134331-0f66f006fb2e // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
-	github.com/stretchr/testify v1.7.2 // indirect
+	github.com/stretchr/objx v0.4.0 // indirect
+	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8 // indirect
 	github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926 // indirect
@@ -268,6 +269,7 @@ require (
 	github.com/urfave/cli v1.22.1 // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	github.com/yuin/goldmark v1.4.13 // indirect
+	gitlab.alibaba-inc.com/rapt/go-security-utils v0.1.4 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.0 // indirect
@@ -277,10 +279,10 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.7.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	go.uber.org/goleak v1.1.11-0.20210813005559-691160354723 // indirect
+	go.uber.org/goleak v1.1.11 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee // indirect
-	go.uber.org/zap v1.19.1 // indirect
+	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b // indirect

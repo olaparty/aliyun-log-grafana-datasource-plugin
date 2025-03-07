@@ -12,6 +12,7 @@ export interface SLSQuery extends DataQuery {
   step?: string // promql step
   queryType?: 'range' | 'instant'; // 查询类型
   totalLogs?: number
+  powerSql?: boolean
 }
 
 export const defaultQuery: Partial<SLSQuery> = {
@@ -22,6 +23,7 @@ export const defaultQuery: Partial<SLSQuery> = {
   logsPerPage: 100,
   currentPage: 1,
   totalLogs: 100,
+  powerSql: false
 };
 export const defaultEidtorQuery: Partial<SLSQuery> = {
   type: 'all',
@@ -31,6 +33,7 @@ export const defaultEidtorQuery: Partial<SLSQuery> = {
   logsPerPage: 100,
   currentPage: 1,
   totalLogs: 100,
+  powerSql: false
 };
 
 /**
