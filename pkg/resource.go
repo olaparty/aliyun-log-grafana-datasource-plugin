@@ -232,7 +232,7 @@ func (ds *SlsDatasource) gotoSLS(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSigninToken(id string, secret string, token string) (*SigninResponse, error) {
-	urlStr := "http://signin.aliyun.com/federation?Action=GetSigninToken"
+	urlStr := "http://signin.alibabacloud.com/federation?Action=GetSigninToken"
 	urlStr += "&AccessKeyId=" + id
 	urlStr += "&AccessKeySecret=" + secret
 	urlStr += "&SecurityToken=" + url.QueryEscape(token)
@@ -262,7 +262,7 @@ func getSigninToken(id string, secret string, token string) (*SigninResponse, er
 }
 
 func genSigninUrl(signinToken string, loginUrl string, destination string) (string, error) {
-	urlStr := "http://signin.aliyun.com/federation?Action=Login"
+	urlStr := "http://signin.alibabacloud.com/federation?Action=Login"
 	urlStr += "&LoginUrl=" + url.QueryEscape(loginUrl)
 	urlStr += "&Destination=" + url.QueryEscape(destination)
 	urlStr += "&SigninToken=" + url.QueryEscape(signinToken)
