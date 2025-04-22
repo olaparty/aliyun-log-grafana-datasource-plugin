@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	sls "github.com/aliyun/aliyun-log-go-sdk"
-	"gitlab.alibaba-inc.com/rapt/go-security-utils/network"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -239,7 +238,6 @@ func getSigninToken(id string, secret string, token string) (*SigninResponse, er
 	urlStr += "&TicketType=mini"
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.DialContext = network.DefaultNetworkFilter.FilterHttpDialContext(transport.DialContext)
 	client := &http.Client{
 		Transport: transport,
 	}
